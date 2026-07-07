@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReportIssueDialog } from "@/features/incidents/report-issue-dialog";
+import { RatingDialog } from "@/features/ratings/rating-dialog";
 import { useCancelOrder, useConfirmDelivery, useConfirmPurchase, useOrder } from "../hooks";
 
 const ACTIVE_STATUSES = new Set([
@@ -101,6 +103,17 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             Confirmar que lo recibí
           </Button>
         )}
+        {buyerActions.canRate(status) && (
+          <RatingDialog
+            orderId={order.id}
+            counterpartLabel="tu viajero"
+            trigger={
+              <Button className="h-12 rounded-full px-6 font-semibold">
+                Calificar al viajero
+              </Button>
+            }
+          />
+        )}
         {buyerActions.canCancel(status, order.fulfillmentStatus) && (
           <Button
             variant="secondary"
@@ -114,6 +127,20 @@ export function OrderDetail({ orderId }: { orderId: string }) {
           >
             Cancelar pedido
           </Button>
+        )}
+        {buyerActions.canReportIssue(status) && (
+          <ReportIssueDialog
+            orderId={order.id}
+            trigger={
+              <Button
+                variant="ghost"
+                className="h-12 rounded-full px-6 font-semibold text-body-text"
+                disabled={busy}
+              >
+                Reportar un problema
+              </Button>
+            }
+          />
         )}
       </div>
 

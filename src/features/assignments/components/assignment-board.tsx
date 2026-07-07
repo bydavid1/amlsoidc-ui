@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RatingDialog } from "@/features/ratings/rating-dialog";
 import { Assignment, travelerNextAction } from "../api";
 import {
   useAcceptAssignment,
@@ -142,9 +143,23 @@ function EngagementCard({ assignment }: { assignment: Assignment }) {
               Ya llegué al destino
             </Button>
           )}
-          {next.kind in WAIT_COPY && (
+          {next.kind === "wait-purchase" || next.kind === "wait-buyer-confirmation" ? (
             <p className="body-sm text-body-text">{WAIT_COPY[next.kind]}</p>
-          )}
+          ) : null}
+          {next.kind === "done" &&
+            (assignment.orderStatus === "DELIVERED" ? (
+              <RatingDialog
+                orderId={assignment.orderId}
+                counterpartLabel="tu comprador"
+                trigger={
+                  <Button className="h-11 rounded-full px-5 font-semibold">
+                    Calificar al comprador
+                  </Button>
+                }
+              />
+            ) : (
+              <p className="body-sm text-semantic-up">{WAIT_COPY.done}</p>
+            ))}
         </div>
       </CardContent>
     </Card>

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/features/auth/auth-provider";
+import { useUnreadCount } from "@/features/notifications/api";
 import { cn } from "@/lib/utils";
 
 const SPACES = [
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const unread = useUnreadCount();
 
   async function handleLogout() {
     await logout();
@@ -61,11 +63,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full"
-              aria-label="Notificaciones"
+              className="relative rounded-full"
+              aria-label={unread > 0 ? `Notificaciones (${unread} sin leer)` : "Notificaciones"}
               onClick={() => router.push("/notificaciones")}
             >
               <Bell className="size-5" />
+              {unread > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              )}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
