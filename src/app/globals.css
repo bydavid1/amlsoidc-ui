@@ -1,26 +1,247 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Bringo UI — design tokens desde docs/DESIGN-coinbase.md
+   Regla: NUNCA hex inline en componentes; siempre estos tokens.
+   ============================================================ */
 
 @theme inline {
+  /* slots shadcn */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* tokens de marca Bringo (DESIGN-coinbase.md) */
+  --color-ink: var(--ink);
+  --color-body-text: var(--body-text);
+  --color-muted-soft: var(--muted-soft);
+  --color-hairline: var(--hairline);
+  --color-hairline-soft: var(--hairline-soft);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-dark-elevated: var(--surface-dark-elevated);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-soft: var(--on-dark-soft);
+  --color-semantic-up: var(--semantic-up);
+  --color-semantic-down: var(--semantic-down);
+  --color-accent-yellow: var(--accent-yellow);
+
+  /* radios: inputs 12px · cards 24px · CTAs pill */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 24px;
+  --radius-3xl: 24px;
+  --radius-4xl: 24px;
+
+  /* ritmo editorial */
+  --spacing-section: 96px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* superficie */
+  --background: #ffffff; /* canvas */
+  --foreground: #0a0b0d; /* ink */
+  --card: #ffffff;
+  --card-foreground: #0a0b0d;
+  --popover: #ffffff;
+  --popover-foreground: #0a0b0d;
+
+  /* Bringo Blue: ÚNICO color de acción */
+  --primary: #0052ff;
+  --primary-foreground: #ffffff;
+
+  /* secundario = surface-strong (pill gris) */
+  --secondary: #eef0f3;
+  --secondary-foreground: #0a0b0d;
+
+  --muted: #f7f7f7; /* surface-soft */
+  --muted-foreground: #7c828a; /* muted */
+  --accent: #eef0f3;
+  --accent-foreground: #0a0b0d;
+  --destructive: #cf202f; /* semantic-down */
+  --border: #dee1e6; /* hairline */
+  --input: #dee1e6;
+  --ring: #0052ff;
+  --radius: 12px; /* inputs */
+
+  /* marca */
+  --ink: #0a0b0d;
+  --body-text: #5b616e;
+  --muted-soft: #a8acb3;
+  --hairline: #dee1e6;
+  --hairline-soft: #eef0f3;
+  --surface-soft: #f7f7f7;
+  --surface-strong: #eef0f3;
+  --surface-dark: #0a0b0d;
+  --surface-dark-elevated: #16181c;
+  --on-dark: #ffffff;
+  --on-dark-soft: #a8acb3;
+  --semantic-up: #05b169;
+  --semantic-down: #cf202f;
+  --accent-yellow: #f4b000;
+}
+
+.dark {
+  --background: #0a0b0d; /* surface-dark como canvas */
+  --foreground: #ffffff;
+  --card: #16181c; /* surface-dark-elevated */
+  --card-foreground: #ffffff;
+  --popover: #16181c;
+  --popover-foreground: #ffffff;
+  --primary: #0052ff;
+  --primary-foreground: #ffffff;
+  --secondary: #16181c;
+  --secondary-foreground: #ffffff;
+  --muted: #16181c;
+  --muted-foreground: #a8acb3;
+  --accent: #16181c;
+  --accent-foreground: #ffffff;
+  --destructive: #cf202f;
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #0052ff;
+
+  --body-text: #a8acb3;
+  --hairline: rgba(255, 255, 255, 0.12);
+  --hairline-soft: rgba(255, 255, 255, 0.08);
+  --surface-soft: #16181c;
+  --surface-strong: #16181c;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   Escala tipográfica (DESIGN-coinbase.md §Typography)
+   Display SIEMPRE weight 400 con tracking negativo.
+   Los tamaños responsivos siguen la tabla de breakpoints.
+   ============================================================ */
+@utility display-mega {
+  font-size: 2.5rem; /* 40px mobile */
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  @media (width >= 640px) {
+    font-size: 4rem; /* 64px tablet */
+  }
+  @media (width >= 1024px) {
+    font-size: 5rem; /* 80px desktop */
+    letter-spacing: -2px;
+  }
+}
+@utility display-xl {
+  font-size: 2.25rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  @media (width >= 1024px) {
+    font-size: 4rem;
+    letter-spacing: -1.6px;
+  }
+}
+@utility display-lg {
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  @media (width >= 1024px) {
+    font-size: 3.25rem; /* 52px */
+    letter-spacing: -1.3px;
+  }
+}
+@utility display-md {
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1.09;
+  @media (width >= 1024px) {
+    font-size: 2.75rem; /* 44px */
+    letter-spacing: -1px;
+  }
+}
+@utility display-sm {
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.11;
+  @media (width >= 1024px) {
+    font-size: 2.25rem; /* 36px */
+    letter-spacing: -0.5px;
+  }
+}
+@utility title-lg {
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.13;
+  letter-spacing: -0.4px;
+}
+@utility title-md {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 600;
+  line-height: 1.33;
+}
+@utility title-sm {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+@utility body-md {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+@utility body-sm {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+@utility caption {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 400;
+  line-height: 1.5;
+}
+@utility caption-strong {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+/* todo valor numérico (precios, capacidad, fechas tabulares) va en mono */
+@utility number-display {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
 }

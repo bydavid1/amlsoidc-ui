@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# logs locales
+*.log
+
+# ejemplo de env SI se versiona
+!.env.local.example
