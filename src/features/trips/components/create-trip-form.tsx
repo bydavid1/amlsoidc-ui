@@ -1,0 +1,208 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCities, useCorridors } from "@/features/geography/api";
+import { ApiError } from "@/lib/api/types";
+import { tripsApi } from "../api";
+import { CreateTripFormValues, createTripFormSchema } from "../schemas";
+
+const NO_CITY = "__none__";
+
+export function CreateTripForm() {
+  const router = useRouter();
+  const corridors = useCorridors();
+
+  const form = useForm<CreateTripFormValues>({
+    resolver: zodResolver(createTripFormSchema),
+    defaultValues: { corridorKey: "", destinationCityId: NO_CITY, arrivalDate: "" },
+  });
+
+  const corridorKey = form.watch("corridorKey");
+  const destinationCountryId = corridorKey ? corridorKey.split("|")[1] : null;
+  const cities = useCities(destinationCountryId);
+
+  async function onSubmit(values: CreateTripFormValues) {
+    const [originCountryId, destCountryId] = values.corridorKey.split("|");
+    try {
+      const trip = await tripsApi.create({
+        originCountryId,
+        destinationCountryId: destCountryId,
+        destinationCityId:
+          values.destinationCityId && values.destinationCityId !== NO_CITY
+            ? values.destinationCityId
+            : undefined,
+        arrivalDate: new Date(values.arrivalDate).toISOString(),
+        capacity: values.capacity,
+      });
+      await tripsApi.publish(trip.id);
+      toast.success("Viaje publicado. Te avisaremos cuando haya pedidos compatibles.");
+      router.replace("/viajar");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        switch (error.code) {
+          case "CORRIDOR_NOT_ENABLED":
+            form.setError("corridorKey", { message: "Aún no operamos esta ruta." });
+            return;
+          case "TRIP_ARRIVAL_IN_PAST":
+            form.setError("arrivalDate", { message: "La fecha debe ser futura." });
+            return;
+          case "TRIP_CAPACITY_INVALID":
+            form.setError("capacity", { message: "Capacidad inválida (1 a 50)." });
+            return;
+          case "VALIDATION_ERROR":
+            for (const d of error.validationDetails) {
+              form.setError(d.field as keyof CreateTripFormValues, {
+                message: d.errors.join(". "),
+              });
+            }
+            return;
+        }
+      }
+      toast.error("No pudimos crear el viaje. Intenta de nuevo.");
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="corridorKey"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ruta del viaje</FormLabel>
+              <Select
+                onValueChange={(v) => {
+                  field.onChange(v);
+                  form.setValue("destinationCityId", NO_CITY);
+                }}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-12 w-full rounded-[12px]">
+                    <SelectValue
+                      placeholder={corridors.isLoading ? "Cargando rutas…" : "¿Desde dónde regresas?"}
+                    />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {corridors.data?.map((c) => (
+                    <SelectItem
+                      key={`${c.origin.id}|${c.destination.id}`}
+                      value={`${c.origin.id}|${c.destination.id}`}
+                    >
+                      {c.origin.name} → {c.destination.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="destinationCityId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Ciudad de llegada (opcional)</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={!destinationCountryId}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-12 w-full rounded-[12px]">
+                    <SelectValue placeholder="Elige la ciudad" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value={NO_CITY}>Sin especificar</SelectItem>
+                  {cities.data?.map((city) => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="arrivalDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fecha de llegada</FormLabel>
+                <FormControl>
+                  <Input type="date" className="h-12 rounded-[12px] font-mono" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="capacity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Pedidos que puedes llevar</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="50"
+                    placeholder="3"
+                    className="h-12 rounded-[12px] font-mono"
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                    }
+                  />
+                </FormControl>
+                <FormDescription>Podrás recibir hasta esa cantidad de encargos.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          disabled={form.formState.isSubmitting}
+          className="h-12 w-full rounded-full text-base font-semibold sm:w-auto sm:px-10"
+        >
+          {form.formState.isSubmitting ? "Publicando…" : "Publicar viaje"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
