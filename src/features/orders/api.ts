@@ -18,12 +18,23 @@ export interface CreateOrderInput {
   productUrl: string;
   estimatedPriceAmount: number;
   estimatedPriceCurrency: string;
+  sizeCategory: string;
   neededBy?: string;
+}
+
+export interface PricingQuote {
+  total: number;
+  breakdown: { baseFee: number; valueComponent: number; sizeComponent: number };
 }
 
 export const ordersApi = {
   async create(input: CreateOrderInput): Promise<Order> {
     return orderSchema.parse(await apiPost<Order>("/orders", input));
+  },
+
+  /** Cotización pública: misma fórmula que fija la ganancia al crear. */
+  quote(price: number, size: string): Promise<PricingQuote> {
+    return apiGet<PricingQuote>("/pricing/quote", { price, size });
   },
 
   async list(params: {

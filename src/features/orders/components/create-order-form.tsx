@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -24,8 +25,14 @@ import {
 } from "@/components/ui/select";
 import { useCities, useCorridors } from "@/features/geography/api";
 import { ApiError } from "@/lib/api/types";
+import { cn } from "@/lib/utils";
 import { ordersApi } from "../api";
-import { CreateOrderFormValues, createOrderFormSchema } from "../schemas";
+import {
+  CreateOrderFormValues,
+  createOrderFormSchema,
+  SIZE_UI,
+  SizeCategory,
+} from "../schemas";
 
 /** corridorKey = "originCountryId|destinationCountryId" (par habilitado por datos). */
 function splitCorridor(key: string): { originCountryId: string; destinationCountryId: string } {
@@ -44,6 +51,7 @@ export function CreateOrderForm() {
       destinationCityId: "",
       productName: "",
       productUrl: "",
+      sizeCategory: "MEDIUM",
       neededBy: "",
     },
   });
@@ -51,6 +59,16 @@ export function CreateOrderForm() {
   const corridorKey = form.watch("corridorKey");
   const destinationCountryId = corridorKey ? splitCorridor(corridorKey).destinationCountryId : null;
   const cities = useCities(destinationCountryId);
+
+  // cotización EN VIVO de la ganancia del viajero (misma fórmula del backend)
+  const price = form.watch("estimatedPriceAmount");
+  const size = form.watch("sizeCategory");
+  const quote = useQuery({
+    queryKey: ["pricing", "quote", price, size],
+    queryFn: () => ordersApi.quote(price, size),
+    enabled: typeof price === "number" && price >= 0 && !!size,
+    staleTime: 5 * 60_000,
+  });
 
   async function onSubmit(values: CreateOrderFormValues) {
     const { originCountryId, destinationCountryId } = splitCorridor(values.corridorKey);
@@ -63,6 +81,7 @@ export function CreateOrderForm() {
         productUrl: values.productUrl,
         estimatedPriceAmount: values.estimatedPriceAmount,
         estimatedPriceCurrency: "USD",
+        sizeCategory: values.sizeCategory,
         neededBy: values.neededBy ? new Date(values.neededBy).toISOString() : undefined,
       });
       toast.success("Pedido creado. Estamos buscando al mejor viajero.");
@@ -202,6 +221,40 @@ export function CreateOrderForm() {
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="sizeCategory"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tamaño del artículo</FormLabel>
+              <FormControl>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {(Object.keys(SIZE_UI) as SizeCategory[]).map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => field.onChange(key)}
+                      className={cn(
+                        "rounded-[16px] border p-4 text-left transition-colors",
+                        field.value === key
+                          ? "border-primary bg-primary/5"
+                          : "border-hairline hover:border-muted-soft",
+                      )}
+                    >
+                      <p className="title-sm text-ink">{SIZE_UI[key].label}</p>
+                      <p className="caption text-body-text">{SIZE_UI[key].examples}</p>
+                    </button>
+                  ))}
+                </div>
+              </FormControl>
+              <FormDescription>
+                Ayuda al viajero a saber si le cabe y define su ganancia.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid gap-6 sm:grid-cols-2">
           <FormField
             control={form.control}
@@ -243,6 +296,23 @@ export function CreateOrderForm() {
             )}
           />
         </div>
+
+        {quote.data && (
+          <div className="rounded-[16px] bg-surface-strong p-5">
+            <div className="flex items-baseline justify-between">
+              <span className="title-sm text-ink">Ganancia del viajero</span>
+              <span className="number-display !text-[22px] text-primary">
+                ${quote.data.total.toFixed(2)} USD
+              </span>
+            </div>
+            <p className="caption mt-1 text-body-text">
+              Base ${quote.data.breakdown.baseFee.toFixed(2)} + valor $
+              {quote.data.breakdown.valueComponent.toFixed(2)} + tamaño $
+              {quote.data.breakdown.sizeComponent.toFixed(2)}. Este monto es lo
+              que pagarás al viajero por traer tu pedido.
+            </p>
+          </div>
+        )}
 
         <Button
           type="submit"

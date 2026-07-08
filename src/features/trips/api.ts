@@ -8,7 +8,6 @@ export interface CreateTripInput {
   destinationCountryId: string;
   destinationCityId?: string;
   arrivalDate: string;
-  capacity: number;
 }
 
 export const tripsApi = {

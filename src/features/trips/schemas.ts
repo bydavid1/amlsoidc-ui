@@ -7,8 +7,6 @@ export const tripSchema = z.object({
   destinationCountryId: z.string(),
   destinationCityId: z.string().nullable(),
   arrivalDate: z.string(),
-  totalCapacity: z.number(),
-  remainingCapacity: z.number(),
   status: z.enum(["DRAFT", "OPEN", "IN_PROGRESS", "CLOSED", "CANCELLED"]),
 });
 export type Trip = z.infer<typeof tripSchema>;
@@ -28,11 +26,6 @@ export const createTripFormSchema = z.object({
     .refine((value) => new Date(value).getTime() > Date.now(), {
       message: "La fecha de llegada debe ser futura",
     }),
-  capacity: z
-    .number("Indica cuántos pedidos puedes llevar")
-    .int("Debe ser un número entero")
-    .min(1, "Mínimo 1")
-    .max(50, "Máximo 50"),
 });
 export type CreateTripFormValues = z.infer<typeof createTripFormSchema>;
 

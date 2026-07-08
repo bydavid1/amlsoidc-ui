@@ -9,8 +9,40 @@ export function useMyAssignments() {
   return useQuery({
     queryKey: ["assignments", "mine"],
     queryFn: assignmentsApi.listMine,
-    // sin websockets: las ofertas nuevas llegan por polling
     refetchInterval: 30_000,
+  });
+}
+
+/** Encargos disponibles para un viaje; polling para ver nuevos pedidos. */
+export function useAvailableOrders(tripId: string) {
+  return useQuery({
+    queryKey: ["assignments", "available", tripId],
+    queryFn: () => assignmentsApi.listAvailableOrders(tripId),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useClaimOrder(tripId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => assignmentsApi.claim(tripId, orderId),
+    onSuccess: () => {
+      toast.success("¡Encargo reclamado! Coordina la recepción del paquete.");
+      void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.code === "ORDER_ALREADY_TAKEN") {
+        toast.error("Otro viajero tomó este encargo primero.");
+        void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+        return;
+      }
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("Este encargo ya no está disponible.");
+        void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+        return;
+      }
+      toast.error("No pudimos reclamar el encargo.");
+    },
   });
 }
 
@@ -24,32 +56,18 @@ function useAssignmentAction(
     onSuccess: () => {
       toast.success(successMessage);
       void queryClient.invalidateQueries({ queryKey: ["assignments"] });
-      void queryClient.invalidateQueries({ queryKey: ["trips"] });
     },
     onError: (error) => {
-      if (error instanceof ApiError) {
-        if (error.code === "ASSIGNMENT_EXPIRED") {
-          toast.error("La oferta venció. El pedido se ofrecerá a otro viajero.");
-          void queryClient.invalidateQueries({ queryKey: ["assignments"] });
-          return;
-        }
-        if (error.status === 409) {
-          toast.error("El encargo cambió de estado. Actualizamos la información.");
-          void queryClient.invalidateQueries({ queryKey: ["assignments"] });
-          return;
-        }
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("El encargo cambió de estado. Actualizamos la información.");
+        void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+        return;
       }
       toast.error("No pudimos completar la acción.");
     },
   });
 }
 
-export function useAcceptAssignment() {
-  return useAssignmentAction(assignmentsApi.accept, "¡Encargo aceptado! Coordina la recepción del paquete.");
-}
-export function useRejectAssignment() {
-  return useAssignmentAction(assignmentsApi.reject, "Oferta rechazada.");
-}
 export function useMarkReceived() {
   return useAssignmentAction(assignmentsApi.markReceived, "Paquete marcado como recibido.");
 }

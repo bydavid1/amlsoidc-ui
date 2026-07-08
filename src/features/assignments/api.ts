@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { apiGet, apiPost } from "@/lib/api/client";
+import { sizeCategorySchema } from "@/features/orders/schemas";
 
 /** Contrato de AssignmentListItemDto: incluye el contexto del pedido. */
 export const assignmentSchema = z.object({
@@ -8,14 +9,30 @@ export const assignmentSchema = z.object({
   tripId: z.string(),
   status: z.enum(["OFFERED", "ACCEPTED", "REJECTED", "EXPIRED", "CANCELLED"]),
   offeredAt: z.string(),
-  expiresAt: z.string(),
+  respondedAt: z.string().nullable(),
   createdAt: z.string(),
   productName: z.string(),
+  sizeCategory: z.string(),
+  travelerRewardAmount: z.coerce.number(),
   destinationCityId: z.string(),
   orderStatus: z.string(),
   fulfillmentStatus: z.string().nullable(),
 });
 export type Assignment = z.infer<typeof assignmentSchema>;
+
+/** Encargo disponible para reclamar (AvailableOrderDto del backend). */
+export const availableOrderSchema = z.object({
+  id: z.string(),
+  productName: z.string(),
+  sizeCategory: sizeCategorySchema,
+  estimatedPriceAmount: z.coerce.number(),
+  estimatedPriceCurrency: z.string(),
+  travelerRewardAmount: z.coerce.number(),
+  destinationCityId: z.string(),
+  neededBy: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type AvailableOrder = z.infer<typeof availableOrderSchema>;
 
 export const assignmentsApi = {
   async listMine(): Promise<Assignment[]> {
@@ -23,11 +40,14 @@ export const assignmentsApi = {
       .array(assignmentSchema)
       .parse(await apiGet<Assignment[]>("/assignments", { limit: 50 }));
   },
-  accept(id: string): Promise<unknown> {
-    return apiPost(`/assignments/${id}/accept`);
+  /** Encargos disponibles compatibles con MI viaje (modelo discovery+claim). */
+  async listAvailableOrders(tripId: string): Promise<AvailableOrder[]> {
+    return z
+      .array(availableOrderSchema)
+      .parse(await apiGet<AvailableOrder[]>(`/trips/${tripId}/available-orders`));
   },
-  reject(id: string): Promise<unknown> {
-    return apiPost(`/assignments/${id}/reject`);
+  claim(tripId: string, orderId: string): Promise<unknown> {
+    return apiPost(`/trips/${tripId}/claim/${orderId}`);
   },
   markReceived(id: string): Promise<unknown> {
     return apiPost(`/assignments/${id}/mark-received`);
@@ -41,7 +61,7 @@ export const assignmentsApi = {
 };
 
 /**
- * Qué le toca hacer al Traveler en un encargo ACCEPTED, derivado del estado
+ * Qué le toca hacer al Traveler en un encargo reclamado, derivado del estado
  * REAL del pedido (la máquina de estados vive en el backend).
  */
 export type TravelerNextAction =

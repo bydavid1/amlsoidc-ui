@@ -1,6 +1,15 @@
 import { z } from "zod";
 
 /** Contrato de OrderResponseDto del backend. */
+export const sizeCategorySchema = z.enum(["SMALL", "MEDIUM", "LARGE"]);
+export type SizeCategory = z.infer<typeof sizeCategorySchema>;
+
+export const SIZE_UI: Record<SizeCategory, { label: string; examples: string }> = {
+  SMALL: { label: "Pequeño", examples: "AirPods, perfume, medicinas" },
+  MEDIUM: { label: "Mediano", examples: "Teléfono, tablet, Nintendo Switch" },
+  LARGE: { label: "Grande", examples: "PlayStation, laptop, dron" },
+};
+
 export const orderSchema = z.object({
   id: z.string(),
   status: z.string(),
@@ -11,6 +20,8 @@ export const orderSchema = z.object({
   productUrl: z.string(),
   estimatedPriceAmount: z.coerce.number(),
   estimatedPriceCurrency: z.string(),
+  sizeCategory: sizeCategorySchema,
+  travelerRewardAmount: z.coerce.number(),
   originCountryId: z.string(),
   destinationCountryId: z.string(),
   destinationCityId: z.string(),
@@ -58,6 +69,7 @@ export const createOrderFormSchema = z.object({
     .number("Ingresa el precio estimado")
     .min(0, "El precio no puede ser negativo")
     .max(1_000_000, "Precio fuera de rango"),
+  sizeCategory: sizeCategorySchema,
   neededBy: z.string().optional(),
 });
 export type CreateOrderFormValues = z.infer<typeof createOrderFormSchema>;

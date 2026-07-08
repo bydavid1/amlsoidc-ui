@@ -158,6 +158,22 @@ export function OrderDetail({ orderId }: { orderId: string }) {
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
+                <dt className="body-sm text-body-text">Ganancia del viajero</dt>
+                <dd className="number-display text-semantic-up">
+                  ${order.travelerRewardAmount.toFixed(2)} USD
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <dt className="body-sm text-body-text">Tamaño</dt>
+                <dd className="body-sm font-semibold text-ink">
+                  {order.sizeCategory === "SMALL"
+                    ? "Pequeño"
+                    : order.sizeCategory === "MEDIUM"
+                      ? "Mediano"
+                      : "Grande"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
                 <dt className="body-sm text-body-text">Creado</dt>
                 <dd className="number-display !text-[14px] text-ink">
                   {format(new Date(order.createdAt), "d 'de' MMMM yyyy", { locale: es })}

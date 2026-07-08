@@ -52,8 +52,6 @@ export function useMarkNotificationRead() {
 export function describeNotification(n: AppNotification): { text: string; href: string } {
   const orderId = typeof n.payload.orderId === "string" ? n.payload.orderId : null;
   switch (n.type) {
-    case "OFFER_RECEIVED":
-      return { text: "Tienes una nueva oferta de encargo.", href: "/viajar/ofertas" };
     case "TRAVELER_ASSIGNED":
       return {
         text: "¡Tu pedido ya tiene viajero asignado!",

@@ -53,7 +53,6 @@ export function CreateTripForm() {
             ? values.destinationCityId
             : undefined,
         arrivalDate: new Date(values.arrivalDate).toISOString(),
-        capacity: values.capacity,
       });
       await tripsApi.publish(trip.id);
       toast.success("Viaje publicado. Te avisaremos cuando haya pedidos compatibles.");
@@ -66,9 +65,6 @@ export function CreateTripForm() {
             return;
           case "TRIP_ARRIVAL_IN_PAST":
             form.setError("arrivalDate", { message: "La fecha debe ser futura." });
-            return;
-          case "TRIP_CAPACITY_INVALID":
-            form.setError("capacity", { message: "Capacidad inválida (1 a 50)." });
             return;
           case "VALIDATION_ERROR":
             for (const d of error.validationDetails) {
@@ -152,48 +148,23 @@ export function CreateTripForm() {
           )}
         />
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="arrivalDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Fecha de llegada</FormLabel>
-                <FormControl>
-                  <Input type="date" className="h-12 rounded-[12px] font-mono" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pedidos que puedes llevar</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="50"
-                    placeholder="3"
-                    className="h-12 rounded-[12px] font-mono"
-                    name={field.name}
-                    ref={field.ref}
-                    onBlur={field.onBlur}
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-                    }
-                  />
-                </FormControl>
-                <FormDescription>Podrás recibir hasta esa cantidad de encargos.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="arrivalDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fecha de llegada</FormLabel>
+              <FormControl>
+                <Input type="date" className="h-12 rounded-[12px] font-mono" {...field} />
+              </FormControl>
+              <FormDescription>
+                Después de publicar verás los encargos disponibles y eliges cuáles llevar
+                según el espacio que tengas.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button
           type="submit"

@@ -70,13 +70,6 @@ export function TripList() {
                     {format(new Date(trip.arrivalDate), "d 'de' MMMM yyyy", { locale: es })}
                   </span>
                 </p>
-                <p className="body-sm text-body-text">
-                  Capacidad:{" "}
-                  <span className="number-display !text-[14px] text-ink">
-                    {trip.remainingCapacity}/{trip.totalCapacity}
-                  </span>{" "}
-                  disponible
-                </p>
               </div>
               <div className="flex items-center gap-3">
                 <Badge
@@ -87,6 +80,11 @@ export function TripList() {
                 >
                   {ui.label}
                 </Badge>
+                {trip.status === "OPEN" && (
+                  <Button asChild size="sm" className="rounded-full font-semibold">
+                    <Link href={`/viajar/${trip.id}/encargos`}>Ver encargos disponibles</Link>
+                  </Button>
+                )}
                 {trip.status === "DRAFT" && (
                   <Button
                     size="sm"

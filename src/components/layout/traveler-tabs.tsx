@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/viajar", label: "Mis viajes" },
-  { href: "/viajar/ofertas", label: "Ofertas y encargos" },
+  { href: "/viajar/encargos", label: "Mis encargos" },
 ];
 
 /** Sub-navegación del espacio Traveler (pills). */
