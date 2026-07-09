@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { apiGetWithMeta, apiPost } from "@/lib/api/client";
+import { apiGet, apiGetWithMeta, apiPost } from "@/lib/api/client";
 import { CursorPage } from "@/lib/api/types";
 import { Trip, TripListRow, tripListRowSchema, tripSchema } from "./schemas";
 
@@ -27,8 +27,17 @@ export const tripsApi = {
     };
   },
 
+  async get(tripId: string): Promise<Trip> {
+    return tripSchema.parse(await apiGet<Trip>(`/trips/${tripId}`));
+  },
+
   async publish(tripId: string): Promise<Trip> {
     return tripSchema.parse(await apiPost<Trip>(`/trips/${tripId}/publish`));
+  },
+
+  /** Cerrar ≠ cancelar: ya tomó sus encargos; deja de ver disponibles. */
+  async close(tripId: string): Promise<Trip> {
+    return tripSchema.parse(await apiPost<Trip>(`/trips/${tripId}/close`));
   },
 
   /** El backend re-matchea automáticamente los pedidos afectados. */

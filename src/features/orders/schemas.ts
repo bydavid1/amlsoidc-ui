@@ -51,6 +51,8 @@ export const orderListRowSchema = z.object({
   destinationCountryId: z.string(),
   status: z.string(),
   fulfillmentStatus: z.string().nullable(),
+  sizeCategory: z.string(),
+  estimatedTotalAmount: z.coerce.number(),
   createdAt: z.string(),
 });
 export type OrderListRow = z.infer<typeof orderListRowSchema>;

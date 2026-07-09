@@ -1,9 +1,41 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/types";
 import { tripsApi } from "./api";
+
+export function useTrip(tripId: string) {
+  return useQuery({
+    queryKey: ["trips", "detail", tripId],
+    queryFn: () => tripsApi.get(tripId),
+  });
+}
+
+export function useCloseTrip() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: tripsApi.close,
+    onSuccess: () => {
+      toast.success("Viaje cerrado. Ya no verás encargos disponibles para este viaje.");
+      void queryClient.invalidateQueries({ queryKey: ["trips"] });
+      void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error("El viaje ya no está publicado.");
+        void queryClient.invalidateQueries({ queryKey: ["trips"] });
+        return;
+      }
+      toast.error("No pudimos cerrar el viaje.");
+    },
+  });
+}
 
 const PAGE_SIZE = 10;
 

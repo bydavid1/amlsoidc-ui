@@ -9,16 +9,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useCancelTrip, useMyTrips, usePublishTrip } from "../hooks";
+import { useMyAssignments } from "@/features/assignments/hooks";
+import { useCancelTrip, useCloseTrip, useMyTrips, usePublishTrip } from "../hooks";
 import { TRIP_STATUS_UI } from "../schemas";
 
 export function TripList() {
   const query = useMyTrips();
   const publish = usePublishTrip();
+  const close = useCloseTrip();
   const cancel = useCancelTrip();
+  const assignments = useMyAssignments();
 
   const trips = query.data?.pages.flatMap((p) => p.items) ?? [];
-  const busy = publish.isPending || cancel.isPending;
+  const busy = publish.isPending || close.isPending || cancel.isPending;
+
+  // encargos activos por viaje (para que cada card muestre su carga)
+  const countByTrip = new Map<string, number>();
+  for (const a of assignments.data ?? []) {
+    if (a.status === "ACCEPTED") {
+      countByTrip.set(a.tripId, (countByTrip.get(a.tripId) ?? 0) + 1);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -60,6 +71,7 @@ export function TripList() {
 
       {trips.map((trip) => {
         const ui = TRIP_STATUS_UI[trip.status];
+        const claimed = countByTrip.get(trip.id) ?? 0;
         return (
           <Card key={trip.id} className="rounded-[16px] border-hairline shadow-none">
             <CardContent className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
@@ -70,8 +82,15 @@ export function TripList() {
                     {format(new Date(trip.arrivalDate), "d 'de' MMMM yyyy", { locale: es })}
                   </span>
                 </p>
+                <p className="body-sm text-body-text">
+                  {claimed > 0
+                    ? `${claimed} encargo${claimed > 1 ? "s" : ""} en curso`
+                    : trip.status === "OPEN"
+                      ? "Sin encargos todavía — revisa los disponibles"
+                      : "Sin encargos"}
+                </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge
                   className={cn(
                     "rounded-full bg-surface-strong caption-strong uppercase",
@@ -80,9 +99,11 @@ export function TripList() {
                 >
                   {ui.label}
                 </Badge>
-                {trip.status === "OPEN" && (
+                {(trip.status === "OPEN" || trip.status === "CLOSED") && (
                   <Button asChild size="sm" className="rounded-full font-semibold">
-                    <Link href={`/viajar/${trip.id}/encargos`}>Ver encargos disponibles</Link>
+                    <Link href={`/viajar/${trip.id}/encargos`}>
+                      {trip.status === "OPEN" ? "Ver encargos disponibles" : "Seguir mis encargos"}
+                    </Link>
                   </Button>
                 )}
                 {trip.status === "DRAFT" && (
@@ -95,10 +116,22 @@ export function TripList() {
                     Publicar
                   </Button>
                 )}
-                {(trip.status === "DRAFT" || trip.status === "OPEN") && (
+                {trip.status === "OPEN" && (
                   <Button
                     size="sm"
                     variant="secondary"
+                    className="rounded-full font-semibold"
+                    disabled={busy}
+                    onClick={() => close.mutate(trip.id)}
+                    title="Ya tomé mis encargos: dejar de ver disponibles"
+                  >
+                    Cerrar viaje
+                  </Button>
+                )}
+                {(trip.status === "DRAFT" || trip.status === "OPEN") && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     className="rounded-full font-semibold text-semantic-down"
                     disabled={busy}
                     onClick={() => {

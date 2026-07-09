@@ -111,13 +111,18 @@ export function OrderList() {
                       {format(new Date(order.createdAt), "d MMM yyyy", { locale: es })}
                     </p>
                   </div>
-                  <OrderStatusBadge
-                    status={
-                      order.status === "SOURCING" && order.fulfillmentStatus
-                        ? order.fulfillmentStatus
-                        : order.status
-                    }
-                  />
+                  <div className="flex items-center gap-4">
+                    <span className="number-display !text-[15px] text-ink">
+                      ${order.estimatedTotalAmount.toFixed(2)}
+                    </span>
+                    <OrderStatusBadge
+                      status={
+                        order.status === "SOURCING" && order.fulfillmentStatus
+                          ? order.fulfillmentStatus
+                          : order.status
+                      }
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </Link>

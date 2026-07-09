@@ -23,7 +23,7 @@ const WAIT_COPY: Record<string, string> = {
   done: "Entregado — ¡buen trabajo!",
 };
 
-function EngagementCard({ assignment }: { assignment: Assignment }) {
+export function EngagementCard({ assignment }: { assignment: Assignment }) {
   const markReceived = useMarkReceived();
   const markInTransit = useMarkInTransit();
   const markArrived = useMarkArrived();

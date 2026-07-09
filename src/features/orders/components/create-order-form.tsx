@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,18 +40,27 @@ function splitCorridor(key: string): { originCountryId: string; destinationCount
   return { originCountryId, destinationCountryId };
 }
 
+const VALID_SIZES = new Set(["SMALL", "MEDIUM", "LARGE"]);
+
 export function CreateOrderForm() {
   const router = useRouter();
   const corridors = useCorridors();
+  // prefill desde "Productos recomendados" (Pedirlo → query params)
+  const searchParams = useSearchParams();
+  const prefillPrice = Number(searchParams.get("price"));
+  const prefillSize = searchParams.get("size") ?? "";
 
   const form = useForm<CreateOrderFormValues>({
     resolver: zodResolver(createOrderFormSchema),
     defaultValues: {
       corridorKey: "",
       destinationCityId: "",
-      productName: "",
-      productUrl: "",
-      sizeCategory: "MEDIUM",
+      productName: searchParams.get("name") ?? "",
+      productUrl: searchParams.get("url") ?? "",
+      sizeCategory: (VALID_SIZES.has(prefillSize) ? prefillSize : "MEDIUM") as SizeCategory,
+      ...(Number.isFinite(prefillPrice) && prefillPrice > 0
+        ? { estimatedPriceAmount: prefillPrice }
+        : {}),
       neededBy: "",
     },
   });

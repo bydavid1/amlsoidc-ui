@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { RequireRole } from "@/components/layout/require-role";
 import { CreateOrderForm } from "@/features/orders/components/create-order-form";
 
@@ -15,7 +16,9 @@ export default function NewOrderPage() {
             eliges al viajero: la asignación es automática.
           </p>
         </div>
-        <CreateOrderForm />
+        <Suspense>
+          <CreateOrderForm />
+        </Suspense>
       </div>
     </RequireRole>
   );
