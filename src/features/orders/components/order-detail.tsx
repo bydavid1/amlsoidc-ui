@@ -152,15 +152,15 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             <Separator className="bg-hairline-soft" />
             <dl className="space-y-3">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="body-sm text-body-text">Precio estimado</dt>
+                <dt className="body-sm text-body-text">Precio del producto</dt>
                 <dd className="number-display text-ink">
                   ${order.estimatedPriceAmount.toFixed(2)} {order.estimatedPriceCurrency}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="body-sm text-body-text">Ganancia del viajero</dt>
-                <dd className="number-display text-semantic-up">
-                  ${order.travelerRewardAmount.toFixed(2)} USD
+                <dt className="body-sm text-body-text">Total aproximado (con servicio)</dt>
+                <dd className="number-display text-primary">
+                  ${order.estimatedTotalAmount.toFixed(2)} {order.estimatedPriceCurrency}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-4">

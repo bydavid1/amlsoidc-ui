@@ -300,16 +300,14 @@ export function CreateOrderForm() {
         {quote.data && (
           <div className="rounded-[16px] bg-surface-strong p-5">
             <div className="flex items-baseline justify-between">
-              <span className="title-sm text-ink">Ganancia del viajero</span>
+              <span className="title-sm text-ink">Total aproximado a pagar</span>
               <span className="number-display !text-[22px] text-primary">
-                ${quote.data.total.toFixed(2)} USD
+                ${quote.data.estimatedTotal.toFixed(2)} USD
               </span>
             </div>
             <p className="caption mt-1 text-body-text">
-              Base ${quote.data.breakdown.baseFee.toFixed(2)} + valor $
-              {quote.data.breakdown.valueComponent.toFixed(2)} + tamaño $
-              {quote.data.breakdown.sizeComponent.toFixed(2)}. Este monto es lo
-              que pagarás al viajero por traer tu pedido.
+              Incluye el producto y el costo del servicio de traída. Es un
+              estimado: el precio final del producto puede variar en la tienda.
             </p>
           </div>
         )}

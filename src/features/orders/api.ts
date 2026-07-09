@@ -22,9 +22,9 @@ export interface CreateOrderInput {
   neededBy?: string;
 }
 
+/** El quote público solo entrega el total aproximado (sin desglose). */
 export interface PricingQuote {
-  total: number;
-  breakdown: { baseFee: number; valueComponent: number; sizeComponent: number };
+  estimatedTotal: number;
 }
 
 export const ordersApi = {

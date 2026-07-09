@@ -31,7 +31,7 @@ const BUYER_STEPS = [
 
 const TRAVELER_STEPS = [
   "Publica tu viaje: ruta, fecha y capacidad",
-  "Recibe ofertas de pedidos compatibles",
+  "Explora los encargos disponibles y elige los que te quepan",
   "Recibe los paquetes y viaja como siempre",
   "Entrega, califica y construye tu reputación",
 ];

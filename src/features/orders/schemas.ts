@@ -21,7 +21,8 @@ export const orderSchema = z.object({
   estimatedPriceAmount: z.coerce.number(),
   estimatedPriceCurrency: z.string(),
   sizeCategory: sizeCategorySchema,
-  travelerRewardAmount: z.coerce.number(),
+  // el Buyer solo ve el total aproximado; el split del servicio es dato interno
+  estimatedTotalAmount: z.coerce.number(),
   originCountryId: z.string(),
   destinationCountryId: z.string(),
   destinationCityId: z.string(),
