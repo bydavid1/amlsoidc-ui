@@ -23,7 +23,7 @@ const SPACES = [
 
 /** top-nav-light del design system: 64px, wordmark azul, switch de espacios. */
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const unread = useUnreadCount();
@@ -56,6 +56,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {space.label}
                 </Link>
               ))}
+              {hasRole("ADMIN") && (
+                <Link
+                  href="/admin"
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-strong"
+                >
+                  Ops
+                </Link>
+              )}
             </nav>
           </div>
 
