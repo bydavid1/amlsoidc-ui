@@ -104,6 +104,9 @@ export function EngagementCard({ assignment }: { assignment: Assignment }) {
               }
             />
             {sizeUi && <span className="caption text-muted-foreground">{sizeUi.label}</span>}
+            {assignment.servicePaid && (
+              <span className="caption-strong uppercase text-semantic-up">Servicio pagado ✓</span>
+            )}
           </div>
         </div>
         <div>

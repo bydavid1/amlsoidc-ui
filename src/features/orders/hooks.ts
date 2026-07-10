@@ -45,6 +45,14 @@ function useOrderAction(action: (orderId: string) => Promise<unknown>, successMe
       void queryClient.invalidateQueries({ queryKey: ["orders", "list"] });
     },
     onError: (error, orderId) => {
+      if (error instanceof ApiError && error.code === "PAYMENT_REQUIRED") {
+        toast.error("Primero paga el servicio de Bringo (botón Pagar servicio).");
+        return;
+      }
+      if (error instanceof ApiError && error.code === "RECEIVING_ADDRESS_MISSING") {
+        toast.error("El viajero aún no registra su dirección de recepción.");
+        return;
+      }
       if (error instanceof ApiError && error.status === 409) {
         toast.error("El pedido cambió de estado. Actualizamos la información.");
         void queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });

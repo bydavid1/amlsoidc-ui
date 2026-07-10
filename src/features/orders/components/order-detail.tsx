@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportIssueDialog } from "@/features/incidents/report-issue-dialog";
+import { PaymentCard } from "@/features/payments/components/payment-card";
 import { RatingDialog } from "@/features/ratings/rating-dialog";
 import { useCancelOrder, useConfirmDelivery, useConfirmPurchase, useOrder } from "../hooks";
 
@@ -83,6 +84,8 @@ export function OrderDetail({ orderId }: { orderId: string }) {
           <StatusStepper status={status} fulfillmentStatus={order.fulfillmentStatus} />
         </CardContent>
       </Card>
+
+      <PaymentCard orderId={order.id} orderStatus={status} />
 
       {/* percepción estilo Uber: el viajero como protagonista, SIN contacto */}
       {order.traveler && (

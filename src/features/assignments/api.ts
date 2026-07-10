@@ -18,6 +18,7 @@ export const assignmentSchema = z.object({
   orderStatus: z.string(),
   fulfillmentStatus: z.string().nullable(),
   receivingAddressLine: z.string().nullable(),
+  servicePaid: z.boolean(),
 });
 export type Assignment = z.infer<typeof assignmentSchema>;
 
