@@ -74,9 +74,27 @@ export function useMarkReceived() {
 export function useMarkInTransit() {
   return useAssignmentAction(assignmentsApi.markInTransit, "¡Buen viaje! El comprador fue notificado.");
 }
-export function useMarkArrived() {
-  return useAssignmentAction(
-    assignmentsApi.markArrived,
-    "Llegada registrada. Coordina la entrega con el comprador.",
+export function useSetReceivingAddress() {
+  return useAssignmentAction2(
+    (vars: { id: string; addressLine: string }) =>
+      assignmentsApi.setReceivingAddress(vars.id, vars.addressLine),
+    "Dirección registrada. El comprador ya puede enviar el producto.",
   );
+}
+
+function useAssignmentAction2<TVars>(
+  action: (vars: TVars) => Promise<unknown>,
+  successMessage: string,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: action,
+    onSuccess: () => {
+      toast.success(successMessage);
+      void queryClient.invalidateQueries({ queryKey: ["assignments"] });
+    },
+    onError: () => {
+      toast.error("No pudimos completar la acción.");
+    },
+  });
 }

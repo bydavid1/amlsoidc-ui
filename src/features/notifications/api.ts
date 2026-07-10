@@ -52,16 +52,26 @@ export function useMarkNotificationRead() {
 export function describeNotification(n: AppNotification): { text: string; href: string } {
   const orderId = typeof n.payload.orderId === "string" ? n.payload.orderId : null;
   switch (n.type) {
-    case "TRAVELER_ASSIGNED":
+    case "TRAVELER_ASSIGNED": {
+      const name = typeof n.payload.travelerFirstName === "string" ? n.payload.travelerFirstName : null;
       return {
-        text: "¡Tu pedido ya tiene viajero asignado!",
+        text: name ? `¡${name} aceptó llevar tu pedido!` : "¡Tu pedido ya tiene viajero asignado!",
         href: orderId ? `/comprar/${orderId}` : "/comprar",
       };
+    }
     case "ORDER_STATUS_CHANGED": {
       const to = typeof n.payload.to === "string" ? n.payload.to : "";
       const state = to.startsWith("fulfillment:") ? to.replace("fulfillment:", "") : to;
+      const name = typeof n.payload.travelerFirstName === "string" ? n.payload.travelerFirstName : null;
+      const NARRATIVE: Record<string, string> = name ? {
+        SOURCING: `${name} está gestionando tu pedido.`,
+        "fulfillment:RECEIVED_BY_TRAVELER": `${name} ya tiene tu paquete.`,
+        IN_TRANSIT: `${name} va en camino a El Salvador.`,
+        READY_FOR_DELIVERY: "Tu paquete llegó — Bringo te lo entrega.",
+      } : {};
+      const narrated = NARRATIVE[to] ?? NARRATIVE[state];
       return {
-        text: `Tu pedido cambió a: ${statusLabel(state)}.`,
+        text: narrated ?? `Tu pedido cambió a: ${statusLabel(state)}.`,
         href: orderId ? `/comprar/${orderId}` : "/comprar",
       };
     }

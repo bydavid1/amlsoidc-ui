@@ -128,3 +128,8 @@ export async function apiPost<T>(url: string, body?: unknown): Promise<T> {
   const res = await http.post<ApiEnvelope<T>>(url, body);
   return res.data?.data as T; // 204 (logout) no trae body
 }
+
+export async function apiPatch<T>(url: string, body?: unknown): Promise<T> {
+  const res = await http.patch<ApiEnvelope<T>>(url, body);
+  return res.data.data;
+}

@@ -17,6 +17,7 @@ export const assignmentSchema = z.object({
   destinationCityId: z.string(),
   orderStatus: z.string(),
   fulfillmentStatus: z.string().nullable(),
+  receivingAddressLine: z.string().nullable(),
 });
 export type Assignment = z.infer<typeof assignmentSchema>;
 
@@ -55,8 +56,8 @@ export const assignmentsApi = {
   markInTransit(id: string): Promise<unknown> {
     return apiPost(`/assignments/${id}/mark-in-transit`);
   },
-  markArrived(id: string): Promise<unknown> {
-    return apiPost(`/assignments/${id}/mark-arrived`);
+  setReceivingAddress(id: string, addressLine: string): Promise<unknown> {
+    return apiPost(`/assignments/${id}/set-receiving-address`, { addressLine });
   },
 };
 
@@ -68,7 +69,8 @@ export type TravelerNextAction =
   | { kind: "wait-purchase" }
   | { kind: "mark-received" }
   | { kind: "mark-in-transit" }
-  | { kind: "mark-arrived" }
+  | { kind: "set-address" }
+  | { kind: "deliver-to-hub" }
   | { kind: "wait-buyer-confirmation" }
   | { kind: "done" }
   | { kind: "none" };
@@ -78,12 +80,16 @@ export function travelerNextAction(a: Assignment): TravelerNextAction {
   switch (a.orderStatus) {
     case "ASSIGNED":
     case "SOURCING":
-      if (a.fulfillmentStatus === "AWAITING_PURCHASE") return { kind: "wait-purchase" };
+      if (a.fulfillmentStatus === "AWAITING_PURCHASE") {
+        // modelo hub: sin dirección registrada, el comprador no puede comprar
+        return a.receivingAddressLine ? { kind: "wait-purchase" } : { kind: "set-address" };
+      }
       if (a.fulfillmentStatus === "PURCHASED") return { kind: "mark-received" };
       if (a.fulfillmentStatus === "RECEIVED_BY_TRAVELER") return { kind: "mark-in-transit" };
       return { kind: "none" };
     case "IN_TRANSIT":
-      return { kind: "mark-arrived" };
+      // el viajero entrega en el punto Bringo; la recepción la confirma Bringo
+      return { kind: "deliver-to-hub" };
     case "READY_FOR_DELIVERY":
       return { kind: "wait-buyer-confirmation" };
     case "DELIVERED":

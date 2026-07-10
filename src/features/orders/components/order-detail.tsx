@@ -2,8 +2,9 @@
 
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Star, UserRound } from "lucide-react";
 import Link from "next/link";
+import { SupportButton } from "@/components/layout/support-button";
 import { OrderStatusBadge } from "@/components/status/order-status-badge";
 import { OrderTimeline } from "@/components/status/order-timeline";
 import { StatusStepper } from "@/components/status/status-stepper";
@@ -83,6 +84,58 @@ export function OrderDetail({ orderId }: { orderId: string }) {
         </CardContent>
       </Card>
 
+      {/* percepción estilo Uber: el viajero como protagonista, SIN contacto */}
+      {order.traveler && (
+        <Card className="rounded-[24px] border-primary/25 bg-primary/5 shadow-none">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 px-8 py-6">
+            <div className="flex items-center gap-4">
+              <span className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <UserRound className="size-6" />
+              </span>
+              <div>
+                <p className="title-md text-ink">
+                  {order.traveler.firstName ?? "Tu viajero"} lleva tu pedido
+                </p>
+                <p className="body-sm text-body-text">
+                  <Star className="mr-1 inline size-3.5 fill-accent-yellow text-accent-yellow" />
+                  <span className="number-display !text-[14px]">
+                    {order.traveler.reputationCount > 0
+                      ? order.traveler.reputationScore.toFixed(1)
+                      : "Nuevo"}
+                  </span>
+                  {order.traveler.reputationCount > 0 && (
+                    <> · {order.traveler.reputationCount} entregas calificadas</>
+                  )}
+                </p>
+              </div>
+            </div>
+            <SupportButton context={`mi pedido ${order.productName}`} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* dirección de envío ANÓNIMA (modelo hub: sin datos del viajero) */}
+      {order.receivingAddress &&
+        (status === "ASSIGNED" || status === "SOURCING") && (
+          <Card className="rounded-[24px] border-hairline shadow-none">
+            <CardContent className="flex items-start gap-4 px-8 py-6">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-strong">
+                <MapPin className="size-5 text-primary" />
+              </span>
+              <div>
+                <p className="title-sm text-ink">Envía tu producto a esta dirección</p>
+                <p className="number-display !text-[15px] mt-1 text-ink">
+                  {order.receivingAddress}
+                </p>
+                <p className="caption mt-1 text-muted-foreground">
+                  Es la dirección de recepción en {order.status === "ASSIGNED" ? "EE.UU." : "origen"}.
+                  Al llegar a El Salvador, Bringo te lo entrega.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       {/* acciones disponibles SEGÚN el estado real (la máquina vive en el backend) */}
       <div className="flex flex-wrap gap-3">
         {buyerActions.canConfirmPurchase(status, order.fulfillmentStatus) && (
@@ -106,10 +159,10 @@ export function OrderDetail({ orderId }: { orderId: string }) {
         {buyerActions.canRate(status) && (
           <RatingDialog
             orderId={order.id}
-            counterpartLabel="tu viajero"
+            title="Califica tu experiencia"
             trigger={
               <Button className="h-12 rounded-full px-6 font-semibold">
-                Calificar al viajero
+                Calificar mi experiencia
               </Button>
             }
           />

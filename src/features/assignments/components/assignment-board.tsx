@@ -1,33 +1,86 @@
 "use client";
 
-import { Inbox } from "lucide-react";
+import { Inbox, MapPinPlus } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { SupportButton } from "@/components/layout/support-button";
 import { OrderStatusBadge } from "@/components/status/order-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RatingDialog } from "@/features/ratings/rating-dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { SIZE_UI, SizeCategory } from "@/features/orders/schemas";
 import { Assignment, travelerNextAction } from "../api";
 import {
-  useMarkArrived,
   useMarkInTransit,
   useMarkReceived,
   useMyAssignments,
+  useSetReceivingAddress,
 } from "../hooks";
 
 const WAIT_COPY: Record<string, string> = {
   "wait-purchase": "Esperando que el comprador compre el producto…",
-  "wait-buyer-confirmation": "Esperando que el comprador confirme la entrega…",
+  "wait-buyer-confirmation": "Bringo tiene tu paquete — esperando la entrega final…",
   done: "Entregado — ¡buen trabajo!",
 };
+
+/** Modelo hub: el traveler registra dónde recibirá el producto en origen. */
+function SetAddressDialog({ assignment }: { assignment: Assignment }) {
+  const [open, setOpen] = useState(false);
+  const [address, setAddress] = useState("");
+  const setReceivingAddress = useSetReceivingAddress();
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="h-11 rounded-full px-5 font-semibold">
+          <MapPinPlus className="size-4" /> Registrar dirección de recepción
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="rounded-[24px] sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="title-lg text-ink">¿Dónde recibirás el producto?</DialogTitle>
+          <DialogDescription className="body-md text-body-text">
+            El comprador enviará su compra a esta dirección. Solo verá la
+            dirección — nunca tu nombre completo ni tu teléfono.
+          </DialogDescription>
+        </DialogHeader>
+        <Textarea
+          placeholder="2345 NW 107th Ave, Doral, FL 33172"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className="min-h-20 rounded-[12px] font-mono"
+        />
+        <Button
+          className="h-12 w-full rounded-full font-semibold"
+          disabled={setReceivingAddress.isPending || address.trim().length < 10}
+          onClick={() =>
+            setReceivingAddress.mutate(
+              { id: assignment.id, addressLine: address.trim() },
+              { onSuccess: () => setOpen(false) },
+            )
+          }
+        >
+          {setReceivingAddress.isPending ? "Guardando…" : "Guardar dirección"}
+        </Button>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function EngagementCard({ assignment }: { assignment: Assignment }) {
   const markReceived = useMarkReceived();
   const markInTransit = useMarkInTransit();
-  const markArrived = useMarkArrived();
-  const busy = markReceived.isPending || markInTransit.isPending || markArrived.isPending;
+  const busy = markReceived.isPending || markInTransit.isPending;
 
   const next = travelerNextAction(assignment);
   const sizeUi = SIZE_UI[assignment.sizeCategory as SizeCategory];
@@ -72,32 +125,28 @@ export function EngagementCard({ assignment }: { assignment: Assignment }) {
               Inicio mi viaje
             </Button>
           )}
-          {next.kind === "mark-arrived" && (
-            <Button
-              className="h-11 rounded-full px-5 font-semibold"
-              disabled={busy}
-              onClick={() => markArrived.mutate(assignment.id)}
-            >
-              Ya llegué al destino
-            </Button>
+          {next.kind === "set-address" && <SetAddressDialog assignment={assignment} />}
+          {next.kind === "deliver-to-hub" && (
+            <div className="max-w-xs space-y-1 text-right">
+              <p className="body-sm font-semibold text-ink">
+                Entrega el paquete en el punto Bringo
+              </p>
+              {process.env.NEXT_PUBLIC_HUB_ADDRESS && (
+                <p className="caption number-display !text-[12px] text-body-text">
+                  {process.env.NEXT_PUBLIC_HUB_ADDRESS}
+                </p>
+              )}
+              <p className="caption text-muted-foreground">
+                Nosotros confirmamos la recepción y tu pago queda liberado.
+              </p>
+            </div>
           )}
           {(next.kind === "wait-purchase" || next.kind === "wait-buyer-confirmation") && (
             <p className="body-sm text-body-text">{WAIT_COPY[next.kind]}</p>
           )}
-          {next.kind === "done" &&
-            (assignment.orderStatus === "DELIVERED" ? (
-              <RatingDialog
-                orderId={assignment.orderId}
-                counterpartLabel="tu comprador"
-                trigger={
-                  <Button className="h-11 rounded-full px-5 font-semibold">
-                    Calificar al comprador
-                  </Button>
-                }
-              />
-            ) : (
-              <p className="body-sm text-semantic-up">{WAIT_COPY.done}</p>
-            ))}
+          {next.kind === "done" && (
+            <p className="body-sm text-semantic-up">{WAIT_COPY.done}</p>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -24,11 +24,11 @@ import { cn } from "@/lib/utils";
  */
 export function RatingDialog({
   orderId,
-  counterpartLabel,
+  title = "Califica tu experiencia",
   trigger,
 }: {
   orderId: string;
-  counterpartLabel: string;
+  title?: string;
   trigger: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
@@ -77,11 +77,9 @@ export function RatingDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="rounded-[24px] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="title-lg text-ink">
-            Califica a {counterpartLabel}
-          </DialogTitle>
+          <DialogTitle className="title-lg text-ink">{title}</DialogTitle>
           <DialogDescription className="body-md text-body-text">
-            Tu calificación construye la confianza de la comunidad.
+            Tu calificación nos ayuda a mejorar el servicio y reconocer a los mejores viajeros.
           </DialogDescription>
         </DialogHeader>
 

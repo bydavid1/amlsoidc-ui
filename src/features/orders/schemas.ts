@@ -38,8 +38,18 @@ export const timelineEntrySchema = z.object({
   occurredAt: z.string(),
 });
 
+/** Percepción sin contacto: solo nombre de pila + reputación del viajero. */
+export const travelerPublicSchema = z.object({
+  firstName: z.string().nullable(),
+  reputationScore: z.coerce.number(),
+  reputationCount: z.coerce.number(),
+});
+export type TravelerPublic = z.infer<typeof travelerPublicSchema>;
+
 export const orderDetailSchema = orderSchema.extend({
   timeline: z.array(timelineEntrySchema),
+  traveler: travelerPublicSchema.nullable(),
+  receivingAddress: z.string().nullable(),
 });
 export type OrderDetail = z.infer<typeof orderDetailSchema>;
 

@@ -98,6 +98,10 @@ export function CreateOrderForm() {
     } catch (error) {
       if (error instanceof ApiError) {
         switch (error.code) {
+          case "PROFILE_INCOMPLETE":
+            toast.error("Completa tu perfil (nombre y teléfono) para continuar.");
+            router.push("/cuenta");
+            return;
           case "CORRIDOR_NOT_ENABLED":
             form.setError("corridorKey", { message: "Aún no operamos esta ruta." });
             return;

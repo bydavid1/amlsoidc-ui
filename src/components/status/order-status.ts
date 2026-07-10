@@ -26,7 +26,7 @@ const STATUS_UI: Record<string, { label: string; tone: Tone }> = {
   ASSIGNED: { label: "Viajero asignado", tone: "progress" },
   SOURCING: { label: "En preparación", tone: "progress" },
   IN_TRANSIT: { label: "En camino", tone: "progress" },
-  READY_FOR_DELIVERY: { label: "Listo para entrega", tone: "progress" },
+  READY_FOR_DELIVERY: { label: "En poder de Bringo", tone: "progress" },
   DELIVERED: { label: "Entregado", tone: "success" },
   COMPLETED: { label: "Completado", tone: "success" },
   DELIVERY_FAILED: { label: "Entrega fallida", tone: "danger" },
@@ -63,7 +63,7 @@ export const HAPPY_PATH_STEPS = [
   { key: "PURCHASED", label: "Comprado" },
   { key: "RECEIVED_BY_TRAVELER", label: "Con el viajero" },
   { key: "IN_TRANSIT", label: "En camino" },
-  { key: "READY_FOR_DELIVERY", label: "Por entregar" },
+  { key: "READY_FOR_DELIVERY", label: "Con Bringo" },
   { key: "DELIVERED", label: "Entregado" },
   { key: "COMPLETED", label: "Completado" },
 ] as const;

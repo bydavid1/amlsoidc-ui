@@ -6,6 +6,9 @@ export const authUserSchema = z.object({
   email: z.string(),
   roles: z.array(z.enum(["BUYER", "TRAVELER", "ADMIN"])),
   status: z.enum(["ACTIVE", "SUSPENDED"]),
+  firstName: z.string().nullable().optional().default(null),
+  phone: z.string().nullable().optional().default(null),
+  hasCompleteProfile: z.boolean().optional().default(false),
 });
 export type AuthUser = z.infer<typeof authUserSchema>;
 export type Role = AuthUser["roles"][number];
