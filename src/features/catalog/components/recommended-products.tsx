@@ -16,6 +16,7 @@ function prefillHref(p: RecommendedProduct): string {
     url: p.productUrl,
     price: String(p.estimatedPriceAmount),
     size: p.sizeCategory,
+    ...(p.imageUrl ? { image: p.imageUrl } : {}),
   });
   return `/comprar/nuevo?${params.toString()}`;
 }

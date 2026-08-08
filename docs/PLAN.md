@@ -264,6 +264,7 @@ F4 y F5 comparten los componentes de estado (construirlos al inicio de F4).
 | R4 | Un usuario con ambos roles puede confundir contextos | Espacios separados `/comprar` y `/viajar` con switch explícito en el TopNav, nunca mezclar acciones de ambos roles en una pantalla |
 | R5 | CORS | El backend ya permite `http://localhost:5173,4200`; **añadir `http://localhost:3000` (o el puerto del Next dev) a `CORS_ORIGINS` del backend** antes de F1 |
 | R6 | Fuentes licenciadas Coinbase | Se usan las sustitutas documentadas (Inter / JetBrains Mono) desde el día 1 |
+| R7 | En el stepper de **Nuevo pedido** el foco no salta de forma consistente al campo faltante tras resolver URL (se queda en URL en algunos entornos) | **Pendiente**. Reproducir en `/comprar/nuevo` al continuar con extracción incompleta. Implementar fix definitivo con manejo imperativo de foco y prueba E2E (Playwright) para verificar que el foco llega a nombre/precio según corresponda |
 
 ---
 

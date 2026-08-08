@@ -1,12 +1,13 @@
 "use client";
 
 import { Package, Plane } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/features/auth/auth-provider";
+import { ProfileForm } from "@/features/auth/components/profile-form";
 import { profilesApi } from "@/features/profiles/api";
 
 /**
@@ -16,7 +17,31 @@ import { profilesApi } from "@/features/profiles/api";
 export default function OnboardingPage() {
   const { user, hasRole, refreshUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next") ?? "/comprar";
   const [busy, setBusy] = useState<"BUYER" | "TRAVELER" | null>(null);
+
+  if (user && !user.hasCompleteProfile) {
+    return (
+      <div className="mx-auto max-w-[720px] space-y-8 px-6 py-16">
+        <div className="space-y-3 text-center">
+          <h1 className="display-md text-ink">Antes de continuar, completa tu perfil</h1>
+          <p className="body-md text-body-text">
+            Necesitamos tu nombre y teléfono para coordinar pedidos y entregas.
+          </p>
+        </div>
+
+        <Card className="rounded-[24px] border-hairline shadow-none">
+          <CardContent className="space-y-6 p-6 sm:p-8">
+            <ProfileForm />
+            <p className="body-sm text-body-text">
+              Cuando guardes tu perfil, aquí mismo verás la activación de comprador y viajero.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   async function activate(kind: "BUYER" | "TRAVELER") {
     setBusy(kind);
@@ -43,6 +68,15 @@ export default function OnboardingPage() {
         <p className="body-md text-body-text">
           {user?.email} — puedes activar ambos perfiles cuando quieras.
         </p>
+        <div>
+          <Button
+            variant="ghost"
+            className="h-10 rounded-full px-5"
+            onClick={() => router.push(nextPath)}
+          >
+            Continuar
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -83,7 +117,7 @@ export default function OnboardingPage() {
             </span>
             <h2 className="title-md text-ink">Quiero viajar</h2>
             <p className="body-md text-body-text flex-1">
-              ¿Regresas a tu país? Publica tu viaje, lleva encargos compatibles
+              Publica tu viaje, lleva encargos compatibles
               con tu capacidad y gana reputación.
             </p>
             {hasRole("TRAVELER") ? (

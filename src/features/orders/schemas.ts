@@ -69,20 +69,31 @@ export type OrderListRow = z.infer<typeof orderListRowSchema>;
 
 /** Formulario de creación — mismas reglas que CreateOrderDto del backend. */
 export const createOrderFormSchema = z.object({
-  corridorKey: z.string().min(1, "Elige la ruta de tu pedido"),
+  destinationCountryId: z.string().min(1, "Elige el país de entrega"),
   destinationCityId: z.string().min(1, "Elige la ciudad de entrega"),
   productName: z
     .string()
     .min(2, "Mínimo 2 caracteres")
     .max(200, "Máximo 200 caracteres"),
   productUrl: z
-    .url("Ingresa la URL del producto (con https://)")
-    .max(2000),
+    .url("Introduce un enlace válido")
+    .max(2000, "El enlace es demasiado largo"),
   estimatedPriceAmount: z
     .number("Ingresa el precio estimado")
     .min(0, "El precio no puede ser negativo")
     .max(1_000_000, "Precio fuera de rango"),
-  sizeCategory: sizeCategorySchema,
-  neededBy: z.string().optional(),
+  neededBy: z
+    .string()
+    .optional()
+    .refine((value) => {
+      if (!value) return true;
+      const parsed = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + 120);
+      return parsed >= today && parsed <= maxDate;
+    }, "Elige una fecha entre hoy y los próximos 120 días"),
 });
 export type CreateOrderFormValues = z.infer<typeof createOrderFormSchema>;
