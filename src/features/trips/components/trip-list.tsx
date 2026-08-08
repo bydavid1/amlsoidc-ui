@@ -1,17 +1,33 @@
 "use client";
 
+import { useQueries } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Plane, Plus } from "lucide-react";
+import { MoreHorizontal, Plane, Plus } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { assignmentsApi } from "@/features/assignments/api";
 import { cn } from "@/lib/utils";
 import { useMyAssignments } from "@/features/assignments/hooks";
+import { geographyApi, useCorridors } from "@/features/geography/api";
 import { useCancelTrip, useCloseTrip, useMyTrips, usePublishTrip } from "../hooks";
 import { TRIP_STATUS_UI } from "../schemas";
+
+function isoToFlag(iso2: string): string {
+  return iso2
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+}
 
 export function TripList() {
   const query = useMyTrips();
@@ -19,9 +35,70 @@ export function TripList() {
   const close = useCloseTrip();
   const cancel = useCancelTrip();
   const assignments = useMyAssignments();
+  const corridors = useCorridors();
 
-  const trips = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const trips = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
   const busy = publish.isPending || close.isPending || cancel.isPending;
+
+  const countryById = useMemo(() => {
+    const map = new Map<string, { name: string; iso2: string }>();
+    for (const corridor of corridors.data ?? []) {
+      map.set(corridor.origin.id, {
+        name: corridor.origin.name,
+        iso2: corridor.origin.iso2,
+      });
+      map.set(corridor.destination.id, {
+        name: corridor.destination.name,
+        iso2: corridor.destination.iso2,
+      });
+    }
+    return map;
+  }, [corridors.data]);
+
+  const destinationCountryIds = useMemo(
+    () => Array.from(new Set(trips.map((trip) => trip.destinationCountryId))),
+    [trips],
+  );
+
+  const cityQueries = useQueries({
+    queries: destinationCountryIds.map((countryId) => ({
+      queryKey: ["geography", "cities", countryId],
+      queryFn: () => geographyApi.listCities(countryId),
+      staleTime: 5 * 60_000,
+    })),
+  });
+
+  const cityNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const queryResult of cityQueries) {
+      for (const city of queryResult.data ?? []) {
+        map.set(city.id, city.name);
+      }
+    }
+    return map;
+  }, [cityQueries]);
+
+  const openTripIds = useMemo(
+    () => trips.filter((trip) => trip.status === "OPEN").map((trip) => trip.id),
+    [trips],
+  );
+
+  const availableQueries = useQueries({
+    queries: openTripIds.map((tripId) => ({
+      queryKey: ["assignments", "available", tripId],
+      queryFn: () => assignmentsApi.listAvailableOrders(tripId),
+      refetchInterval: 30_000,
+    })),
+  });
+
+  const availableByTripId = useMemo(() => {
+    const map = new Map<string, (typeof availableQueries)[number]>();
+    openTripIds.forEach((tripId, index) => {
+      const result = availableQueries[index];
+      if (result) map.set(tripId, result);
+    });
+    return map;
+  }, [availableQueries, openTripIds]);
 
   // encargos activos por viaje (para que cada card muestre su carga)
   const countByTrip = new Map<string, number>();
@@ -72,25 +149,61 @@ export function TripList() {
       {trips.map((trip) => {
         const ui = TRIP_STATUS_UI[trip.status];
         const claimed = countByTrip.get(trip.id) ?? 0;
+        const origin = countryById.get(trip.originCountryId);
+        const destination = countryById.get(trip.destinationCountryId);
+        const destinationCityName = trip.destinationCityId
+          ? cityNameById.get(trip.destinationCityId) ?? "Cargando ciudad..."
+          : "Sin especificar";
+
+        const available = availableByTripId.get(trip.id);
+        const compatibleCount = available?.data?.length ?? 0;
+
+        const canViewAssignments =
+          trip.status === "OPEN" || trip.status === "CLOSED" || trip.status === "IN_PROGRESS";
+
+        let matchSummary = "";
+        if (trip.status === "OPEN") {
+          if (available?.isLoading) {
+            matchSummary = "Buscando encargos compatibles...";
+          } else if (compatibleCount > 0) {
+            matchSummary = `${compatibleCount} encargo${compatibleCount > 1 ? "s" : ""} compatibles`;
+          } else {
+            matchSummary = "Aún no hay encargos compatibles";
+          }
+        } else if (claimed > 0) {
+          matchSummary = `${claimed} encargo${claimed > 1 ? "s" : ""} en curso`;
+        } else {
+          matchSummary = "Sin encargos activos";
+        }
+
         return (
           <Card key={trip.id} className="rounded-[16px] border-hairline shadow-none">
-            <CardContent className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
-              <div className="space-y-1">
-                <p className="title-sm text-ink">
-                  Llegada:{" "}
-                  <span className="number-display !text-[15px]">
-                    {format(new Date(trip.arrivalDate), "d 'de' MMMM yyyy", { locale: es })}
-                  </span>
-                </p>
-                <p className="body-sm text-body-text">
-                  {claimed > 0
-                    ? `${claimed} encargo${claimed > 1 ? "s" : ""} en curso`
-                    : trip.status === "OPEN"
-                      ? "Sin encargos todavía — revisa los disponibles"
-                      : "Sin encargos"}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
+            <CardContent className="space-y-4 px-6 py-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-2">
+                  <p className="title-sm text-ink">
+                    {origin ? `${isoToFlag(origin.iso2)} ${origin.name}` : "Origen"} {"->"}{" "}
+                    {destination
+                      ? `${isoToFlag(destination.iso2)} ${destination.name}`
+                      : "Destino"}
+                  </p>
+                  <div className="space-y-1">
+                    <p className="body-sm text-body-text">
+                      <span className="caption-strong text-ink">Llegada:</span>{" "}
+                      <span className="number-display !text-[15px]">
+                        {format(new Date(trip.arrivalDate), "d 'de' MMMM yyyy", { locale: es })}
+                      </span>
+                    </p>
+                    <p className="body-sm text-body-text">
+                      <span className="caption-strong text-ink">Destino:</span> {destinationCityName}
+                    </p>
+                    <p className="body-sm text-body-text">
+                      <span className="caption-strong text-ink">Estado:</span> {ui.label}
+                    </p>
+                    <p className="body-sm text-body-text">{matchSummary}</p>
+                  </div>
+                </div>
+
                 <Badge
                   className={cn(
                     "rounded-full bg-surface-strong caption-strong uppercase",
@@ -99,13 +212,15 @@ export function TripList() {
                 >
                   {ui.label}
                 </Badge>
-                {(trip.status === "OPEN" || trip.status === "CLOSED") && (
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {canViewAssignments && (
                   <Button asChild size="sm" className="rounded-full font-semibold">
-                    <Link href={`/viajar/${trip.id}/encargos`}>
-                      {trip.status === "OPEN" ? "Ver encargos disponibles" : "Seguir mis encargos"}
-                    </Link>
+                    <Link href={`/viajar/${trip.id}/encargos`}>Ver encargos</Link>
                   </Button>
                 )}
+
                 {trip.status === "DRAFT" && (
                   <Button
                     size="sm"
@@ -116,36 +231,46 @@ export function TripList() {
                     Publicar
                   </Button>
                 )}
-                {trip.status === "OPEN" && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="rounded-full font-semibold"
-                    disabled={busy}
-                    onClick={() => close.mutate(trip.id)}
-                    title="Ya tomé mis encargos: dejar de ver disponibles"
-                  >
-                    Cerrar viaje
-                  </Button>
-                )}
+
                 {(trip.status === "DRAFT" || trip.status === "OPEN") && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="rounded-full font-semibold text-semantic-down"
-                    disabled={busy}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "¿Cancelar este viaje? Sus encargos volverán a asignarse a otros viajeros.",
-                        )
-                      ) {
-                        cancel.mutate(trip.id);
-                      }
-                    }}
-                  >
-                    Cancelar
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-9 rounded-full"
+                        aria-label="Más acciones"
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem disabled>Editar viaje (próximamente)</DropdownMenuItem>
+                      {trip.status === "OPEN" && (
+                        <DropdownMenuItem
+                          onClick={() => close.mutate(trip.id)}
+                          disabled={busy}
+                        >
+                          Cerrar viaje
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "¿Cancelar este viaje? Sus encargos volverán a asignarse a otros viajeros.",
+                            )
+                          ) {
+                            cancel.mutate(trip.id);
+                          }
+                        }}
+                        disabled={busy}
+                      >
+                        Cancelar viaje
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
             </CardContent>

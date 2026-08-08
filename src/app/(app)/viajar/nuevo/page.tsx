@@ -11,8 +11,7 @@ export default function NewTripPage() {
         <div className="space-y-2">
           <h1 className="display-sm text-ink">Publicar viaje</h1>
           <p className="body-md text-body-text">
-            Indica tu ruta, cuándo llegas y cuántos pedidos puedes llevar. Te
-            ofreceremos encargos compatibles automáticamente.
+            Comparte tu viaje y te mostraremos encargos compatibles que podrías llevar contigo.
           </p>
         </div>
         <CreateTripForm />

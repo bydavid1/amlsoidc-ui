@@ -18,7 +18,7 @@ export type TripListRow = z.infer<typeof tripListRowSchema>;
 
 /** Formulario de creación — mismas reglas que CreateTripDto del backend. */
 export const createTripFormSchema = z.object({
-  corridorKey: z.string().min(1, "Elige tu ruta de viaje"),
+  corridorKey: z.string().min(1, "Elige desde dónde viajas"),
   destinationCityId: z.string().optional(),
   arrivalDate: z
     .string()

@@ -6,6 +6,7 @@ import { PackageSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ApiError } from "@/lib/api/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SIZE_UI } from "@/features/orders/schemas";
 import { useAvailableOrders, useClaimOrder } from "../hooks";
@@ -29,11 +30,16 @@ export function AvailableOrders({ tripId }: { tripId: string }) {
   }
 
   if (query.isError) {
+    const apiError = query.error instanceof ApiError ? query.error : null;
+    const isTripNotOpen = apiError?.code === "TRIP_NOT_OPEN";
+
     return (
       <Card className="rounded-[24px] border-hairline shadow-none">
         <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
           <p className="body-md text-semantic-down">
-            No pudimos cargar los encargos (¿el viaje está publicado?).
+            {isTripNotOpen
+              ? "Este viaje ya no está publicado. Solo los viajes en estado Publicado pueden ver encargos disponibles."
+              : "No pudimos cargar los encargos disponibles para este viaje."}
           </p>
           <Button variant="secondary" className="rounded-full" onClick={() => query.refetch()}>
             Reintentar
@@ -56,6 +62,9 @@ export function AvailableOrders({ tripId }: { tripId: string }) {
             <h2 className="title-md text-ink">No hay encargos disponibles ahora</h2>
             <p className="body-md text-body-text">
               Cuando alguien pida algo en tu ruta, aparecerá aquí. Revisamos cada 30 segundos.
+            </p>
+            <p className="caption text-body-text">
+              Si estás en pruebas, puede tomar un momento en aparecer hasta que exista una coincidencia compatible para este viaje.
             </p>
           </div>
         </CardContent>

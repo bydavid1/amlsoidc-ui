@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,18 +30,68 @@ import { CreateTripFormValues, createTripFormSchema } from "../schemas";
 
 const NO_CITY = "__none__";
 
+function isoToFlag(iso2: string): string {
+  return iso2
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+}
+
+function toDateInputValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateFromToday(days: number): string {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return toDateInputValue(date);
+}
+
 export function CreateTripForm() {
   const router = useRouter();
   const corridors = useCorridors();
+
+  const corridorRows = useMemo(() => corridors.data ?? [], [corridors.data]);
+
+  const origins = useMemo(() => {
+    const byId = new Map<string, (typeof corridorRows)[number]["origin"]>();
+    for (const row of corridorRows) {
+      byId.set(row.origin.id, row.origin);
+    }
+    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [corridorRows]);
 
   const form = useForm<CreateTripFormValues>({
     resolver: zodResolver(createTripFormSchema),
     defaultValues: { corridorKey: "", destinationCityId: NO_CITY, arrivalDate: "" },
   });
 
-  const corridorKey = form.watch("corridorKey");
-  const destinationCountryId = corridorKey ? corridorKey.split("|")[1] : null;
+  const corridorKey = useWatch({ control: form.control, name: "corridorKey" });
+  const selectedOriginId = corridorKey ? corridorKey.split("|")[0] : "";
+  const selectedDestinationId = corridorKey ? corridorKey.split("|")[1] : "";
+
+  const destinationsForOrigin = useMemo(() => {
+    if (!selectedOriginId) return [];
+    const byId = new Map<string, (typeof corridorRows)[number]["destination"]>();
+    for (const row of corridorRows) {
+      if (row.origin.id === selectedOriginId) {
+        byId.set(row.destination.id, row.destination);
+      }
+    }
+    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [corridorRows, selectedOriginId]);
+
+  const selectedOrigin = origins.find((country) => country.id === selectedOriginId) ?? null;
+  const selectedDestination =
+    destinationsForOrigin.find((country) => country.id === selectedDestinationId) ?? null;
+
+  const destinationCountryId = selectedDestination?.id ?? null;
   const cities = useCities(destinationCountryId);
+
+  const minArrivalDate = dateFromToday(1);
 
   async function onSubmit(values: CreateTripFormValues) {
     const [originCountryId, destCountryId] = values.corridorKey.split("|");
@@ -62,7 +113,7 @@ export function CreateTripForm() {
         switch (error.code) {
           case "PROFILE_INCOMPLETE":
             toast.error("Completa tu perfil (nombre y teléfono) para continuar.");
-            router.push("/cuenta");
+            router.push("/onboarding?next=/viajar/nuevo");
             return;
           case "CORRIDOR_NOT_ENABLED":
             form.setError("corridorKey", { message: "Aún no operamos esta ruta." });
@@ -91,28 +142,31 @@ export function CreateTripForm() {
           name="corridorKey"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ruta del viaje</FormLabel>
+              <FormLabel>¿Desde dónde viajas?</FormLabel>
               <Select
                 onValueChange={(v) => {
-                  field.onChange(v);
+                  const destinations = corridorRows.filter((row) => row.origin.id === v);
+                  const defaultDestination = destinations[0]?.destination;
+                  if (defaultDestination) {
+                    field.onChange(`${v}|${defaultDestination.id}`);
+                  } else {
+                    field.onChange("");
+                  }
                   form.setValue("destinationCityId", NO_CITY);
                 }}
-                value={field.value}
+                value={selectedOriginId}
               >
                 <FormControl>
                   <SelectTrigger className="h-12 w-full rounded-[12px]">
                     <SelectValue
-                      placeholder={corridors.isLoading ? "Cargando rutas…" : "¿Desde dónde regresas?"}
+                      placeholder={corridors.isLoading ? "Cargando países..." : "Elige país de origen"}
                     />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {corridors.data?.map((c) => (
-                    <SelectItem
-                      key={`${c.origin.id}|${c.destination.id}`}
-                      value={`${c.origin.id}|${c.destination.id}`}
-                    >
-                      {c.origin.name} → {c.destination.name}
+                  {origins.map((country) => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {isoToFlag(country.iso2)} {country.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -122,12 +176,55 @@ export function CreateTripForm() {
           )}
         />
 
+        {selectedOrigin && selectedDestination && (
+          <div className="space-y-3 rounded-[14px] border border-hairline bg-surface-soft p-4">
+            <div className="space-y-1">
+              <p className="caption-strong text-ink">Destino</p>
+              <p className="title-sm text-ink">
+                {isoToFlag(selectedDestination.iso2)} {selectedDestination.name}
+              </p>
+            </div>
+            <p className="body-sm text-body-text">
+              {isoToFlag(selectedOrigin.iso2)} {selectedOrigin.name} {"->"} {isoToFlag(selectedDestination.iso2)}{" "}
+              {selectedDestination.name}
+            </p>
+          </div>
+        )}
+
+        {selectedOrigin && destinationsForOrigin.length > 1 && (
+          <FormItem>
+            <FormLabel>¿Dónde llegas?</FormLabel>
+            <Select
+              onValueChange={(destinationId) => {
+                form.setValue("corridorKey", `${selectedOrigin.id}|${destinationId}`, {
+                  shouldValidate: true,
+                });
+                form.setValue("destinationCityId", NO_CITY);
+              }}
+              value={selectedDestinationId}
+            >
+              <FormControl>
+                <SelectTrigger className="h-12 w-full rounded-[12px]">
+                  <SelectValue placeholder="Elige país de destino" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {destinationsForOrigin.map((country) => (
+                  <SelectItem key={country.id} value={country.id}>
+                    {isoToFlag(country.iso2)} {country.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormItem>
+        )}
+
         <FormField
           control={form.control}
           name="destinationCityId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ciudad de llegada (opcional)</FormLabel>
+              <FormLabel>¿Dónde llegas?</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 value={field.value}
@@ -135,7 +232,7 @@ export function CreateTripForm() {
               >
                 <FormControl>
                   <SelectTrigger className="h-12 w-full rounded-[12px]">
-                    <SelectValue placeholder="Elige la ciudad" />
+                    <SelectValue placeholder={destinationCountryId ? "Ciudad de llegada (opcional)" : "Primero elige el país de origen"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -147,6 +244,9 @@ export function CreateTripForm() {
                   ))}
                 </SelectContent>
               </Select>
+              <FormDescription>
+                Si aún no sabes dónde llegarás, puedes dejarlo sin especificar.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -157,13 +257,17 @@ export function CreateTripForm() {
           name="arrivalDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fecha de llegada</FormLabel>
+              <FormLabel>¿Cuándo llegas?</FormLabel>
               <FormControl>
-                <Input type="date" className="h-12 rounded-[12px] font-mono" {...field} />
+                <Input
+                  type="date"
+                  min={minArrivalDate}
+                  className="h-12 rounded-[12px] font-mono"
+                  {...field}
+                />
               </FormControl>
               <FormDescription>
-                Después de publicar verás los encargos disponibles y eliges cuáles llevar
-                según el espacio que tengas.
+                Te mostraremos encargos que puedan entregarse dentro de tu fecha de llegada.
               </FormDescription>
               <FormMessage />
             </FormItem>
