@@ -16,6 +16,7 @@ export const assignmentSchema = z.object({
   travelerRewardAmount: z.coerce.number(),
   destinationCityId: z.string(),
   orderStatus: z.string(),
+  flowType: z.string(),
   fulfillmentStatus: z.string().nullable(),
   receivingAddressLine: z.string().nullable(),
   servicePaid: z.boolean(),
@@ -85,7 +86,15 @@ export function travelerNextAction(a: Assignment): TravelerNextAction {
         // modelo hub: sin dirección registrada, el comprador no puede comprar
         return a.receivingAddressLine ? { kind: "wait-purchase" } : { kind: "set-address" };
       }
+      if (
+        a.fulfillmentStatus === "PURCHASED" &&
+        (a.flowType === "BRINGO_PURCHASES_DIRECT_DELIVERY" ||
+          a.flowType === "BRINGO_PURCHASES_HUB_DELIVERY")
+      ) {
+        return { kind: "none" };
+      }
       if (a.fulfillmentStatus === "PURCHASED") return { kind: "mark-received" };
+      if (a.fulfillmentStatus === "TRACKING_REGISTERED") return { kind: "mark-received" };
       if (a.fulfillmentStatus === "RECEIVED_BY_TRAVELER") return { kind: "mark-in-transit" };
       return { kind: "none" };
     case "IN_TRANSIT":

@@ -13,7 +13,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminOrder, useAdminOrders, useConfirmHubReception } from "@/features/admin/api";
+import {
+  AdminOrder,
+  useAdminOrders,
+  useConfirmHubReception,
+  useDispatchToBuyer,
+  useRegisterProcurement,
+  useRegisterTracking,
+} from "@/features/admin/api";
 import { cn } from "@/lib/utils";
 
 /** Confirmar recepción en hub con puntuación opcional del viajero. */
@@ -66,13 +73,106 @@ function HubReceptionDialog({ order }: { order: AdminOrder }) {
   );
 }
 
+function ProcurementActions({ order }: { order: AdminOrder }) {
+  const registerProcurement = useRegisterProcurement();
+  const registerTracking = useRegisterTracking();
+
+  const isBringoProcurementFlow =
+    order.flowType === "BRINGO_PURCHASES_DIRECT_DELIVERY" ||
+    order.flowType === "BRINGO_PURCHASES_HUB_DELIVERY";
+
+  const canRegisterProcurement =
+    isBringoProcurementFlow && order.fulfillmentStatus === "AWAITING_PURCHASE";
+  const canRegisterTracking = isBringoProcurementFlow && order.fulfillmentStatus === "PURCHASED";
+
+  if (!canRegisterProcurement && !canRegisterTracking) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {canRegisterProcurement && (
+        <Button
+          variant="secondary"
+          className="h-10 rounded-full"
+          disabled={registerProcurement.isPending}
+          onClick={() => registerProcurement.mutate(order.id)}
+        >
+          Registrar compra
+        </Button>
+      )}
+      {canRegisterTracking && (
+        <Button
+          className="h-10 rounded-full"
+          disabled={registerTracking.isPending}
+          onClick={() => {
+            const trackingNumber = window.prompt("Ingresa el tracking number");
+            if (!trackingNumber) return;
+            registerTracking.mutate({ orderId: order.id, trackingNumber });
+          }}
+        >
+          Registrar tracking
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function DispatchToBuyerAction({ order }: { order: AdminOrder }) {
+  const dispatch = useDispatchToBuyer();
+
+  if (
+    order.flowType !== "BRINGO_PURCHASES_HUB_DELIVERY" ||
+    order.fulfillmentStatus !== "HUB_RECEIVED_BY_BRINGO"
+  ) {
+    return null;
+  }
+
+  return (
+    <Button
+      variant="secondary"
+      className="h-10 rounded-full"
+      disabled={dispatch.isPending}
+      onClick={() => dispatch.mutate(order.id)}
+    >
+      Marcar despacho al comprador
+    </Button>
+  );
+}
+
 export default function AdminOperationsPage() {
+  const sourcing = useAdminOrders("SOURCING");
   const inTransit = useAdminOrders("IN_TRANSIT");
   const readyForDelivery = useAdminOrders("READY_FOR_DELIVERY");
 
   return (
     <div className="space-y-10">
       <h1 className="display-sm text-ink">Operación</h1>
+
+      <section className="space-y-3">
+        <h2 className="title-md text-ink">
+          Compras y tracking (B/C) ({sourcing.data?.length ?? "…"})
+        </h2>
+        {sourcing.isLoading ? (
+          <Skeleton className="h-24 w-full rounded-[16px]" />
+        ) : (sourcing.data ?? []).length === 0 ? (
+          <p className="body-md text-body-text">Sin órdenes en aprovisionamiento.</p>
+        ) : (
+          sourcing.data?.map((o) => (
+            <Card key={o.id} className="rounded-[16px] border-hairline bg-background shadow-none">
+              <CardContent className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
+                <div>
+                  <p className="title-sm text-ink">{o.productName}</p>
+                  <p className="caption text-body-text">
+                    {o.buyerEmail} · {o.flowType} · {o.flowStep}
+                  </p>
+                </div>
+                <ProcurementActions order={o} />
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </section>
 
       <section className="space-y-3">
         <h2 className="title-md text-ink">
@@ -95,7 +195,11 @@ export default function AdminOperationsPage() {
                     </span>
                   </p>
                 </div>
-                <HubReceptionDialog order={o} />
+                {o.flowType === "BRINGO_PURCHASES_HUB_DELIVERY" ? (
+                  <HubReceptionDialog order={o} />
+                ) : (
+                  <span className="caption text-body-text">Flujo sin hub</span>
+                )}
               </CardContent>
             </Card>
           ))
@@ -118,7 +222,10 @@ export default function AdminOperationsPage() {
                     Entregar a {o.buyerEmail} — el comprador confirma la recepción en su app.
                   </p>
                 </div>
-                <span className="caption-strong uppercase text-primary">Listo para entregar</span>
+                <div className="flex items-center gap-2">
+                  <DispatchToBuyerAction order={o} />
+                  <span className="caption-strong uppercase text-primary">Listo para entregar</span>
+                </div>
               </CardContent>
             </Card>
           ))

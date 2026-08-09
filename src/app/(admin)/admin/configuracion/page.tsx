@@ -15,12 +15,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useActiveFlowSetting, useSetActiveFlowSetting } from "@/features/admin/api";
 
 const FLOW_LABEL: Record<
-  "TRAVELER_PURCHASES_PRODUCT" | "CUSTOMER_SHIPS_TO_TRAVELER" | "BUYER_SHIPS_TO_TRAVELER",
+  | "TRAVELER_PURCHASES_PRODUCT"
+  | "BRINGO_PURCHASES_DIRECT_DELIVERY"
+  | "BRINGO_PURCHASES_HUB_DELIVERY",
   string
 > = {
   TRAVELER_PURCHASES_PRODUCT: "Flujo A — El viajero compra",
-  CUSTOMER_SHIPS_TO_TRAVELER: "Flujo B — Bringo compra y el viajero entrega directo",
-  BUYER_SHIPS_TO_TRAVELER: "Flujo C — Bringo compra, pasa por hub y Bringo entrega",
+  BRINGO_PURCHASES_DIRECT_DELIVERY:
+    "Flujo B — Bringo compra y el viajero entrega directo",
+  BRINGO_PURCHASES_HUB_DELIVERY:
+    "Flujo C — Bringo compra, pasa por hub y Bringo entrega",
 };
 
 export default function AdminConfigurationPage() {
@@ -70,8 +74,8 @@ export default function AdminConfigurationPage() {
                 setPendingFlow(
                   value as
                     | "TRAVELER_PURCHASES_PRODUCT"
-                    | "CUSTOMER_SHIPS_TO_TRAVELER"
-                    | "BUYER_SHIPS_TO_TRAVELER",
+                    | "BRINGO_PURCHASES_DIRECT_DELIVERY"
+                    | "BRINGO_PURCHASES_HUB_DELIVERY",
                 )
               }
             >

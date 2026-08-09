@@ -8,12 +8,15 @@ import {
   CreditCard,
   Flag,
   MapPin,
+  Building2,
   Package,
   PackageCheck,
+  PackageSearch,
   PartyPopper,
   Plane,
   Search,
   UserCheck,
+  Truck,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -45,7 +48,10 @@ const STATE_VISUALS: Record<string, { icon: LucideIcon; tone: Tone }> = {
   // sub-flujo del Fulfillment
   AWAITING_PURCHASE: { icon: Clock, tone: "progress" },
   PURCHASED: { icon: CreditCard, tone: "progress" },
+  TRACKING_REGISTERED: { icon: PackageSearch, tone: "progress" },
   RECEIVED_BY_TRAVELER: { icon: PackageCheck, tone: "progress" },
+  HUB_RECEIVED_BY_BRINGO: { icon: Building2, tone: "progress" },
+  DISPATCHED_TO_BUYER: { icon: Truck, tone: "progress" },
 };
 
 const TONE_ACTIVE: Record<Tone, string> = {

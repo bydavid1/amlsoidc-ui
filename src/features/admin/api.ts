@@ -11,6 +11,7 @@ export const adminOrderSchema = z.object({
   id: z.string(),
   status: z.string(),
   flowType: z.string(),
+  flowStep: z.string(),
   fulfillmentStatus: z.string().nullable(),
   productName: z.string(),
   buyerEmail: z.string(),
@@ -69,8 +70,8 @@ export type AdminUser = z.infer<typeof adminUserSchema>;
 export const activeFlowSettingSchema = z.object({
   activeFlowType: z.enum([
     "TRAVELER_PURCHASES_PRODUCT",
-    "CUSTOMER_SHIPS_TO_TRAVELER",
-    "BUYER_SHIPS_TO_TRAVELER",
+    "BRINGO_PURCHASES_DIRECT_DELIVERY",
+    "BRINGO_PURCHASES_HUB_DELIVERY",
   ]),
 });
 export type ActiveFlowSetting = z.infer<typeof activeFlowSettingSchema>;
@@ -224,10 +225,31 @@ export const useSetActiveFlowSetting = adminMutation(
   (vars: {
     activeFlowType:
       | "TRAVELER_PURCHASES_PRODUCT"
-      | "CUSTOMER_SHIPS_TO_TRAVELER"
-      | "BUYER_SHIPS_TO_TRAVELER";
+      | "BRINGO_PURCHASES_DIRECT_DELIVERY"
+      | "BRINGO_PURCHASES_HUB_DELIVERY";
     reason?: string;
   }) => apiPost("/admin/settings/fulfillment-flow", vars),
   "Flujo activo actualizado para nuevas órdenes.",
   [["admin", "settings", "fulfillment-flow"], ["admin", "orders", "ALL"]],
+);
+
+export const useRegisterProcurement = adminMutation(
+  (orderId: string) => apiPost(`/admin/orders/${orderId}/register-procurement`),
+  "Compra registrada para la orden.",
+  [["admin", "orders", "ALL"]],
+);
+
+export const useRegisterTracking = adminMutation(
+  (vars: { orderId: string; trackingNumber: string }) =>
+    apiPost(`/admin/orders/${vars.orderId}/register-tracking`, {
+      trackingNumber: vars.trackingNumber,
+    }),
+  "Tracking registrado.",
+  [["admin", "orders", "ALL"]],
+);
+
+export const useDispatchToBuyer = adminMutation(
+  (orderId: string) => apiPost(`/admin/orders/${orderId}/dispatch-to-buyer`),
+  "Despacho al comprador registrado.",
+  [["admin", "orders", "ALL"]],
 );

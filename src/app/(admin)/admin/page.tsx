@@ -26,6 +26,13 @@ const STATUSES = [
   "CANCELLED",
 ];
 
+function flowLabel(flowType: string): string {
+  if (flowType === "TRAVELER_PURCHASES_PRODUCT") return "A";
+  if (flowType === "BRINGO_PURCHASES_DIRECT_DELIVERY") return "B";
+  if (flowType === "BRINGO_PURCHASES_HUB_DELIVERY") return "C";
+  return flowType;
+}
+
 /** La tabla que nos dice a NOSOTROS: precio + viajero + comisión + total. */
 export default function AdminMoneyPage() {
   const [status, setStatus] = useState("ALL");
@@ -86,6 +93,7 @@ export default function AdminMoneyPage() {
                     "Producto",
                     "Comprador",
                     "Flujo",
+                    "Paso",
                     "Estado",
                     "Precio",
                     "Viajero",
@@ -109,7 +117,8 @@ export default function AdminMoneyPage() {
                     <td className="body-sm max-w-44 truncate px-5 py-3 text-body-text">
                       {o.buyerEmail}
                     </td>
-                    <td className="body-sm px-5 py-3 text-body-text">{o.flowType}</td>
+                    <td className="body-sm px-5 py-3 text-body-text">{flowLabel(o.flowType)}</td>
+                    <td className="body-sm px-5 py-3 text-body-text">{o.flowStep}</td>
                     <td className="px-5 py-3">
                       <OrderStatusBadge status={o.fulfillmentStatus ?? o.status} />
                     </td>
@@ -129,7 +138,7 @@ export default function AdminMoneyPage() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="body-md px-5 py-8 text-center text-body-text">
+                    <td colSpan={9} className="body-md px-5 py-8 text-center text-body-text">
                       Sin pedidos con ese filtro.
                     </td>
                   </tr>

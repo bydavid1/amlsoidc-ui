@@ -17,7 +17,13 @@ export type OrderStatus =
   | "CANCELLED"
   | "EXPIRED";
 
-export type FulfillmentStatus = "AWAITING_PURCHASE" | "PURCHASED" | "RECEIVED_BY_TRAVELER";
+export type FulfillmentStatus =
+  | "AWAITING_PURCHASE"
+  | "PURCHASED"
+  | "TRACKING_REGISTERED"
+  | "RECEIVED_BY_TRAVELER"
+  | "HUB_RECEIVED_BY_BRINGO"
+  | "DISPATCHED_TO_BUYER";
 
 type Tone = "neutral" | "progress" | "success" | "danger";
 
@@ -36,7 +42,10 @@ const STATUS_UI: Record<string, { label: string; tone: Tone }> = {
   // sub-flujo (nivel 2) — aparece como displayStatus durante SOURCING
   AWAITING_PURCHASE: { label: "Esperando tu compra", tone: "progress" },
   PURCHASED: { label: "Producto comprado", tone: "progress" },
+  TRACKING_REGISTERED: { label: "Tracking registrado", tone: "progress" },
   RECEIVED_BY_TRAVELER: { label: "En manos del viajero", tone: "progress" },
+  HUB_RECEIVED_BY_BRINGO: { label: "Recibido en punto Bringo", tone: "progress" },
+  DISPATCHED_TO_BUYER: { label: "Despachado al comprador", tone: "progress" },
 };
 
 export function statusLabel(status: string): string {
@@ -79,7 +88,10 @@ export function happyPathIndex(
     case "ASSIGNED":
       return 1;
     case "SOURCING":
+      if (fulfillmentStatus === "DISPATCHED_TO_BUYER") return 5;
+      if (fulfillmentStatus === "HUB_RECEIVED_BY_BRINGO") return 5;
       if (fulfillmentStatus === "RECEIVED_BY_TRAVELER") return 3;
+      if (fulfillmentStatus === "TRACKING_REGISTERED") return 2;
       if (fulfillmentStatus === "PURCHASED") return 2;
       return 1;
     case "IN_TRANSIT":
