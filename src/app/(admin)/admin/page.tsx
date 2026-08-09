@@ -82,7 +82,16 @@ export default function AdminMoneyPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-hairline">
-                  {["Producto", "Comprador", "Estado", "Precio", "Viajero", "Bringo", "Total"].map(
+                  {[
+                    "Producto",
+                    "Comprador",
+                    "Flujo",
+                    "Estado",
+                    "Precio",
+                    "Viajero",
+                    "Bringo",
+                    "Total",
+                  ].map(
                     (h) => (
                       <th key={h} className="caption-strong px-5 py-3 uppercase text-body-text">
                         {h}
@@ -100,6 +109,7 @@ export default function AdminMoneyPage() {
                     <td className="body-sm max-w-44 truncate px-5 py-3 text-body-text">
                       {o.buyerEmail}
                     </td>
+                    <td className="body-sm px-5 py-3 text-body-text">{o.flowType}</td>
                     <td className="px-5 py-3">
                       <OrderStatusBadge status={o.fulfillmentStatus ?? o.status} />
                     </td>
@@ -119,7 +129,7 @@ export default function AdminMoneyPage() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="body-md px-5 py-8 text-center text-body-text">
+                    <td colSpan={8} className="body-md px-5 py-8 text-center text-body-text">
                       Sin pedidos con ese filtro.
                     </td>
                   </tr>

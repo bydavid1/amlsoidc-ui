@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   PackageCheck,
   ShieldAlert,
+  SlidersHorizontal,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -21,6 +22,7 @@ const NAV = [
   { href: "/admin/payouts", label: "Payouts", icon: Banknote },
   { href: "/admin/disputas", label: "Disputas", icon: ShieldAlert },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
+  { href: "/admin/configuracion", label: "Configuración", icon: SlidersHorizontal },
   { href: "/admin/curaduria", label: "Curaduría", icon: Sparkles },
 ];
 

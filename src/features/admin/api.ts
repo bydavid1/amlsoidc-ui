@@ -10,6 +10,7 @@ import { apiGet, apiPost } from "@/lib/api/client";
 export const adminOrderSchema = z.object({
   id: z.string(),
   status: z.string(),
+  flowType: z.string(),
   fulfillmentStatus: z.string().nullable(),
   productName: z.string(),
   buyerEmail: z.string(),
@@ -65,6 +66,15 @@ export const adminUserSchema = z.object({
 });
 export type AdminUser = z.infer<typeof adminUserSchema>;
 
+export const activeFlowSettingSchema = z.object({
+  activeFlowType: z.enum([
+    "TRAVELER_PURCHASES_PRODUCT",
+    "CUSTOMER_SHIPS_TO_TRAVELER",
+    "BUYER_SHIPS_TO_TRAVELER",
+  ]),
+});
+export type ActiveFlowSetting = z.infer<typeof activeFlowSettingSchema>;
+
 // ---------- queries ----------
 
 export function useAdminOrders(status?: string) {
@@ -115,6 +125,14 @@ export function useAdminUsers(q: string) {
       z
         .array(adminUserSchema)
         .parse(await apiGet("/admin/users", { limit: 50, ...(q ? { q } : {}) })),
+  });
+}
+
+export function useActiveFlowSetting() {
+  return useQuery({
+    queryKey: ["admin", "settings", "fulfillment-flow"],
+    queryFn: async () =>
+      activeFlowSettingSchema.parse(await apiGet("/admin/settings/fulfillment-flow")),
   });
 }
 
@@ -200,4 +218,16 @@ export const useDeactivateRecommended = adminMutation(
   (id: string) => apiPost(`/admin/recommended-products/${id}/deactivate`),
   "Producto retirado de la curaduría.",
   [["catalog"]],
+);
+
+export const useSetActiveFlowSetting = adminMutation(
+  (vars: {
+    activeFlowType:
+      | "TRAVELER_PURCHASES_PRODUCT"
+      | "CUSTOMER_SHIPS_TO_TRAVELER"
+      | "BUYER_SHIPS_TO_TRAVELER";
+    reason?: string;
+  }) => apiPost("/admin/settings/fulfillment-flow", vars),
+  "Flujo activo actualizado para nuevas órdenes.",
+  [["admin", "settings", "fulfillment-flow"], ["admin", "orders", "ALL"]],
 );
