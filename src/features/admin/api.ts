@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import { apiGet, apiPost } from "@/lib/api/client";
+import { ApiError } from "@/lib/api/types";
 
 // ---------- schemas ----------
 
@@ -15,6 +16,8 @@ export const adminOrderSchema = z.object({
   fulfillmentStatus: z.string().nullable(),
   productName: z.string(),
   buyerEmail: z.string(),
+  travelerName: z.string().nullable().optional().default(null),
+  travelerEmail: z.string().nullable().optional().default(null),
   originCountryId: z.string(),
   destinationCountryId: z.string(),
   createdAt: z.string(),
@@ -25,6 +28,19 @@ export const adminOrderSchema = z.object({
   buyerTotalAmount: z.coerce.number(),
 });
 export type AdminOrder = z.infer<typeof adminOrderSchema>;
+
+export const adminTimelineEntrySchema = z.object({
+  fromState: z.string().nullable(),
+  toState: z.string(),
+  actor: z.string().nullable(),
+  occurredAt: z.string(),
+});
+export type AdminTimelineEntry = z.infer<typeof adminTimelineEntrySchema>;
+
+export const adminOrderDetailSchema = adminOrderSchema.extend({
+  timeline: z.array(adminTimelineEntrySchema),
+});
+export type AdminOrderDetail = z.infer<typeof adminOrderDetailSchema>;
 
 export const payoutSchema = z.object({
   paymentId: z.string(),
@@ -85,6 +101,32 @@ export function useAdminOrders(status?: string) {
       z
         .array(adminOrderSchema)
         .parse(await apiGet("/admin/orders", { limit: 50, ...(status ? { status } : {}) })),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useAdminOrder(orderId: string) {
+  return useQuery({
+    queryKey: ["admin", "orders", "detail", orderId],
+    queryFn: async () => {
+      try {
+        return adminOrderDetailSchema.parse(await apiGet(`/admin/orders/${orderId}`));
+      } catch (error) {
+        // Compatibilidad: si el backend aún no expone /admin/orders/:id,
+        // usamos el listado para mostrar al menos el detalle operativo básico.
+        if (error instanceof ApiError && error.status === 404) {
+          const rows = z
+            .array(adminOrderSchema)
+            .parse(await apiGet("/admin/orders", { limit: 200 }));
+          const row = rows.find((candidate) => candidate.id === orderId);
+          if (row) {
+            return { ...row, timeline: [] };
+          }
+        }
+        throw error;
+      }
+    },
+    enabled: Boolean(orderId),
     refetchInterval: 30_000,
   });
 }
