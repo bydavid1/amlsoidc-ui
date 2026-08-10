@@ -79,9 +79,125 @@ export const adminUserSchema = z.object({
   phone: z.string().nullable(),
   roles: z.array(z.string()),
   status: z.enum(["ACTIVE", "SUSPENDED"]),
+  travelerProfileId: z.string().nullable().optional().default(null),
   createdAt: z.string(),
 });
 export type AdminUser = z.infer<typeof adminUserSchema>;
+
+const identityDocumentTypeSchema = z.enum(["DUI", "PASSPORT", "DRIVER_LICENSE", "NATIONAL_ID"]);
+export type IdentityDocumentType = z.infer<typeof identityDocumentTypeSchema>;
+
+export const kycArtifactSchema = z.object({
+  id: z.string(),
+  caseId: z.string(),
+  type: z.enum(["DOCUMENT_FRONT", "DOCUMENT_BACK", "SELFIE", "OTHER"]),
+  storageKey: z.string(),
+  mimeType: z.string(),
+  sizeBytes: z.coerce.number(),
+  checksumSha256: z.string().nullable(),
+  uploadedAt: z.string(),
+});
+export type KycArtifact = z.infer<typeof kycArtifactSchema>;
+
+export const kycDecisionSchema = z.object({
+  id: z.string(),
+  caseId: z.string(),
+  decision: z.enum(["APPROVE", "REJECT", "REQUEST_RETRY"]),
+  reason: z.string(),
+  decidedByUserId: z.string(),
+  decidedAt: z.string(),
+});
+export type KycDecision = z.infer<typeof kycDecisionSchema>;
+
+export const kycCaseSchema = z.object({
+  id: z.string(),
+  travelerProfileId: z.string(),
+  status: z.enum(["SUBMITTED", "IN_REVIEW", "APPROVED", "REJECTED", "RETRY_REQUESTED"]),
+  documentCountryIso2: z.string(),
+  documentType: identityDocumentTypeSchema,
+  documentFingerprint: z.string(),
+  submittedAt: z.string(),
+  reviewedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
+  travelerProfile: z.object({
+    id: z.string(),
+    user: z.object({
+      id: z.string(),
+      email: z.string(),
+      firstName: z.string().nullable(),
+    }),
+  }),
+  artifacts: z.array(kycArtifactSchema),
+  manualDecisions: z.array(kycDecisionSchema),
+});
+export type KycCase = z.infer<typeof kycCaseSchema>;
+
+export const blocklistEntrySchema = z.object({
+  id: z.string(),
+  documentCountryIso2: z.string(),
+  documentType: identityDocumentTypeSchema,
+  documentFingerprint: z.string(),
+  reason: z.string(),
+  blockedByUserId: z.string(),
+  blockedAt: z.string(),
+  unblockedByUserId: z.string().nullable(),
+  unblockedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type BlocklistEntry = z.infer<typeof blocklistEntrySchema>;
+
+export const travelerRiskProfileSchema = z.object({
+  travelerProfileId: z.string(),
+  user: z.object({
+    id: z.string(),
+    email: z.string(),
+    firstName: z.string().nullable(),
+    phone: z.string().nullable(),
+  }),
+  reputationScore: z.coerce.number(),
+  reputationCount: z.coerce.number(),
+  assignmentsTotal: z.coerce.number(),
+  incidentsTotal: z.coerce.number(),
+  successRate: z.coerce.number().nullable(),
+  trips: z.array(
+    z.object({
+      assignmentId: z.string(),
+      orderId: z.string(),
+      productName: z.string(),
+      orderStatus: z.string(),
+      claimedAt: z.string(),
+    }),
+  ),
+  limitOverride: z
+    .object({
+      id: z.string(),
+      travelerProfileId: z.string(),
+      maxOrderValueAmount: z.coerce.number(),
+      currency: z.string(),
+      reason: z.string(),
+      changedByUserId: z.string(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    })
+    .nullable(),
+  limitAuditLogs: z.array(
+    z.object({
+      id: z.string(),
+      travelerProfileId: z.string(),
+      action: z.enum(["CREATED", "UPDATED", "REMOVED"]),
+      fromAmount: z.coerce.number().nullable(),
+      toAmount: z.coerce.number().nullable(),
+      currency: z.string(),
+      reason: z.string(),
+      changedByUserId: z.string(),
+      createdAt: z.string(),
+    }),
+  ),
+});
+export type TravelerRiskProfile = z.infer<typeof travelerRiskProfileSchema>;
 
 export const activeFlowSettingSchema = z.object({
   activeFlowType: z.enum([
@@ -176,6 +292,48 @@ export function useActiveFlowSetting() {
     queryKey: ["admin", "settings", "fulfillment-flow"],
     queryFn: async () =>
       activeFlowSettingSchema.parse(await apiGet("/admin/settings/fulfillment-flow")),
+  });
+}
+
+export function useKycCases() {
+  return useQuery({
+    queryKey: ["admin", "kyc", "cases"],
+    queryFn: async () =>
+      z.array(kycCaseSchema).parse(await apiGet("/admin/kyc/cases", { limit: 50 })),
+    refetchInterval: 30_000,
+  });
+}
+
+export function useKycCase(caseId: string | null) {
+  return useQuery({
+    queryKey: ["admin", "kyc", "cases", caseId],
+    queryFn: async () => kycCaseSchema.parse(await apiGet(`/admin/kyc/cases/${caseId}`)),
+    enabled: Boolean(caseId),
+  });
+}
+
+export function useBlocklist(params: {
+  countryIso2?: string;
+  type?: IdentityDocumentType;
+  number?: string;
+}) {
+  return useQuery({
+    queryKey: ["admin", "identity", "blocklist", params],
+    queryFn: async () =>
+      z
+        .array(blocklistEntrySchema)
+        .parse(await apiGet("/admin/identity/blocklist", { limit: 50, ...params })),
+  });
+}
+
+export function useTravelerRiskProfile(travelerProfileId: string | null) {
+  return useQuery({
+    queryKey: ["admin", "travelers", travelerProfileId, "risk-profile"],
+    queryFn: async () =>
+      travelerRiskProfileSchema.parse(
+        await apiGet(`/admin/travelers/${travelerProfileId}/risk-profile`),
+      ),
+    enabled: Boolean(travelerProfileId),
   });
 }
 
@@ -294,4 +452,40 @@ export const useDispatchToBuyer = adminMutation(
   (orderId: string) => apiPost(`/admin/orders/${orderId}/dispatch-to-buyer`),
   "Despacho al comprador registrado.",
   [["admin", "orders", "ALL"]],
+);
+
+export const useDecideKycCase = adminMutation(
+  (vars: { caseId: string; decision: "APPROVE" | "REJECT" | "REQUEST_RETRY"; reason: string }) =>
+    apiPost(`/admin/kyc/cases/${vars.caseId}/decision`, {
+      decision: vars.decision,
+      reason: vars.reason,
+    }),
+  "Decisión KYC registrada.",
+  [["admin", "kyc"]],
+);
+
+export const useBlockDocument = adminMutation(
+  (vars: {
+    document: { countryIso2: string; type: IdentityDocumentType; number: string };
+    reason: string;
+  }) => apiPost("/admin/identity/blocklist", vars),
+  "Documento bloqueado.",
+  [["admin", "identity", "blocklist"]],
+);
+
+export const useUnblockDocument = adminMutation(
+  (id: string) => apiPost(`/admin/identity/blocklist/${id}/unblock`),
+  "Documento desbloqueado.",
+  [["admin", "identity", "blocklist"]],
+);
+
+export const useAdjustTravelerLimit = adminMutation(
+  (vars: { travelerProfileId: string; maxOrderValueAmount: number; currency: string; reason: string }) =>
+    apiPost(`/admin/travelers/${vars.travelerProfileId}/limit-override`, {
+      maxOrderValueAmount: vars.maxOrderValueAmount,
+      currency: vars.currency,
+      reason: vars.reason,
+    }),
+  "Límite del viajero actualizado.",
+  [["admin", "travelers"], ["admin", "users"]],
 );
