@@ -133,3 +133,8 @@ export async function apiPatch<T>(url: string, body?: unknown): Promise<T> {
   const res = await http.patch<ApiEnvelope<T>>(url, body);
   return res.data.data;
 }
+
+export async function apiPut<T>(url: string, body?: unknown): Promise<T> {
+  const res = await http.put<ApiEnvelope<T>>(url, body);
+  return res.data.data;
+}

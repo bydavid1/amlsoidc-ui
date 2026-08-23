@@ -4,7 +4,9 @@ import { z } from "zod";
 export const authUserSchema = z.object({
   id: z.string(),
   email: z.string(),
-  roles: z.array(z.enum(["BUYER", "TRAVELER", "ADMIN"])),
+  roles: z.array(
+    z.enum(["BUYER", "TRAVELER", "ADMIN", "OPS_AGENT", "SOPORTE_DISPUTAS", "RIESGO_LEGAL"]),
+  ),
   status: z.enum(["ACTIVE", "SUSPENDED"]),
   firstName: z.string().nullable().optional().default(null),
   phone: z.string().nullable().optional().default(null),

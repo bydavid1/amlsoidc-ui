@@ -9,6 +9,7 @@ import {
   ShieldAlert,
   SlidersHorizontal,
   Sparkles,
+  UserCog,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -16,27 +17,40 @@ import { usePathname, useRouter } from "next/navigation";
 import { RequireAuth } from "@/components/layout/require-auth";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-provider";
+import { Role } from "@/features/auth/schemas";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "/admin", label: "Dinero", icon: LayoutDashboard },
-  { href: "/admin/operacion", label: "Operación", icon: PackageCheck },
-  { href: "/admin/payouts", label: "Payouts", icon: Banknote },
-  { href: "/admin/disputas", label: "Disputas", icon: ShieldAlert },
-  { href: "/admin/kyc", label: "KYC", icon: IdCard },
-  { href: "/admin/blocklist", label: "Blocklist", icon: Ban },
-  { href: "/admin/usuarios", label: "Usuarios", icon: Users },
-  { href: "/admin/configuracion", label: "Configuración", icon: SlidersHorizontal },
-  { href: "/admin/curaduria", label: "Curaduría", icon: Sparkles },
+const NAV: { href: string; label: string; icon: typeof LayoutDashboard; role: Role }[] = [
+  { href: "/admin", label: "Dinero", icon: LayoutDashboard, role: "ADMIN" },
+  { href: "/admin/operacion", label: "Operación", icon: PackageCheck, role: "OPS_AGENT" },
+  { href: "/admin/payouts", label: "Payouts", icon: Banknote, role: "ADMIN" },
+  { href: "/admin/disputas", label: "Disputas", icon: ShieldAlert, role: "SOPORTE_DISPUTAS" },
+  { href: "/admin/kyc", label: "KYC", icon: IdCard, role: "RIESGO_LEGAL" },
+  { href: "/admin/blocklist", label: "Blocklist", icon: Ban, role: "RIESGO_LEGAL" },
+  { href: "/admin/usuarios", label: "Usuarios", icon: Users, role: "RIESGO_LEGAL" },
+  { href: "/admin/configuracion", label: "Configuración", icon: SlidersHorizontal, role: "ADMIN" },
+  { href: "/admin/curaduria", label: "Curaduría", icon: Sparkles, role: "ADMIN" },
+  { href: "/admin/equipo", label: "Equipo", icon: UserCog, role: "ADMIN" },
 ];
 
-/** Consola de operación de Bringo — solo rol ADMIN. */
+/** Sección de /admin cuyo rol gatea el pathname actual (match por segmento, no exacto — cubre rutas dinámicas como /admin/kyc/[caseId]). */
+function requiredRoleFor(pathname: string): Role {
+  const match = [...NAV].sort((a, b) => b.href.length - a.href.length).find((item) => {
+    if (item.href === "/admin") return pathname === "/admin";
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  });
+  return match?.role ?? "ADMIN";
+}
+
+/** Consola de operación de Bringo — un rol de equipo, cada sección gateada por el suyo (ADMIN ve todo). */
 function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, hasRole, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
-  if (!hasRole("ADMIN")) {
+  const isTeamMember = NAV.some((item) => hasRole(item.role));
+
+  if (!isTeamMember) {
     return (
       <div className="mx-auto max-w-md space-y-4 px-6 py-24 text-center">
         <h1 className="display-sm text-ink">Acceso restringido</h1>
@@ -50,14 +64,21 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const visibleNav = NAV.filter((item) => hasRole("ADMIN") || hasRole(item.role));
+  const requiredRole = requiredRoleFor(pathname);
+  const canAccessSection = hasRole("ADMIN") || hasRole(requiredRole);
+
   return (
     <div className="flex min-h-screen bg-surface-soft">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-hairline bg-background p-5 sm:flex">
-        <Link href="/admin" className="title-md mb-8 font-bold text-primary">
+        <Link
+          href={visibleNav[0]?.href ?? "/admin"}
+          className="title-md mb-8 font-bold text-primary"
+        >
           bringo <span className="caption-strong uppercase text-ink">ops</span>
         </Link>
         <nav className="flex flex-1 flex-col gap-1">
-          {NAV.map((item) => (
+          {visibleNav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -87,7 +108,25 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </Button>
         </div>
       </aside>
-      <main className="flex-1 overflow-x-hidden px-6 py-10 sm:px-10">{children}</main>
+      <main className="flex-1 overflow-x-hidden px-6 py-10 sm:px-10">
+        {canAccessSection ? (
+          children
+        ) : (
+          <div className="mx-auto max-w-md space-y-4 py-24 text-center">
+            <h1 className="display-sm text-ink">No tienes acceso a esta sección</h1>
+            <p className="body-md text-body-text">
+              Tu rol no incluye esta parte del panel. Elegí una de las tuyas:
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {visibleNav.map((item) => (
+                <Button key={item.href} asChild variant="secondary" size="sm" className="rounded-full">
+                  <Link href={item.href}>{item.label}</Link>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

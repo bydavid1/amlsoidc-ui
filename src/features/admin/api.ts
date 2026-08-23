@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
-import { apiGet, apiPost } from "@/lib/api/client";
+import { apiGet, apiPost, apiPut } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 
 // ---------- schemas ----------
@@ -498,6 +498,13 @@ export const useUnblockDocument = adminMutation(
   (id: string) => apiPost(`/admin/identity/blocklist/${id}/unblock`),
   "Documento desbloqueado.",
   [["admin", "identity", "blocklist"]],
+);
+
+export const useSetTeamRoles = adminMutation(
+  (vars: { userId: string; roles: string[] }) =>
+    apiPut(`/admin/users/${vars.userId}/roles`, { roles: vars.roles }),
+  "Roles actualizados.",
+  [["admin", "users"]],
 );
 
 export const useAdjustTravelerLimit = adminMutation(
