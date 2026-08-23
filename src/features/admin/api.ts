@@ -84,6 +84,21 @@ export const adminUserSchema = z.object({
 });
 export type AdminUser = z.infer<typeof adminUserSchema>;
 
+export const userStatusAuditEntrySchema = z.object({
+  id: z.string(),
+  action: z.enum(["SUSPENDED", "REACTIVATED"]),
+  reason: z.string().nullable(),
+  changedByUserId: z.string(),
+  createdAt: z.string(),
+});
+export type UserStatusAuditEntry = z.infer<typeof userStatusAuditEntrySchema>;
+
+export const adminUserDetailSchema = adminUserSchema.extend({
+  buyerProfileId: z.string().nullable().optional().default(null),
+  statusHistory: z.array(userStatusAuditEntrySchema),
+});
+export type AdminUserDetail = z.infer<typeof adminUserDetailSchema>;
+
 const identityDocumentTypeSchema = z.enum(["DUI", "PASSPORT", "DRIVER_LICENSE", "NATIONAL_ID"]);
 export type IdentityDocumentType = z.infer<typeof identityDocumentTypeSchema>;
 
@@ -214,7 +229,42 @@ export const activeFlowSettingSchema = z.object({
 });
 export type ActiveFlowSetting = z.infer<typeof activeFlowSettingSchema>;
 
+export const adminOrdersSummarySchema = z.object({
+  byFlow: z.array(z.object({ flowType: z.string(), count: z.coerce.number() })),
+  byStep: z.array(z.object({ step: z.string(), count: z.coerce.number() })),
+  pendingActionCount: z.coerce.number(),
+});
+export type AdminOrdersSummary = z.infer<typeof adminOrdersSummarySchema>;
+
+export const adminModerationSummarySchema = z.object({
+  kycPendingCount: z.coerce.number(),
+  blockedDocumentsCount: z.coerce.number(),
+  travelersWithLimitOverrideCount: z.coerce.number(),
+  suspendedUsersCount: z.coerce.number(),
+});
+export type AdminModerationSummary = z.infer<typeof adminModerationSummarySchema>;
+
 // ---------- queries ----------
+
+export function useAdminOrdersSummary(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin", "dashboard", "orders-summary"],
+    queryFn: async () =>
+      adminOrdersSummarySchema.parse(await apiGet("/admin/dashboard/orders-summary")),
+    enabled,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useAdminModerationSummary(enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin", "dashboard", "moderation-summary"],
+    queryFn: async () =>
+      adminModerationSummarySchema.parse(await apiGet("/admin/dashboard/moderation-summary")),
+    enabled,
+    refetchInterval: 30_000,
+  });
+}
 
 export function useAdminOrders(status?: string) {
   return useQuery({
@@ -283,13 +333,26 @@ export function useDisputes(status?: string) {
   });
 }
 
-export function useAdminUsers(q: string) {
+export function useAdminUsers(
+  q: string,
+  document?: { countryIso2?: string; type?: IdentityDocumentType; number?: string },
+) {
   return useQuery({
-    queryKey: ["admin", "users", q],
+    queryKey: ["admin", "users", q, document],
     queryFn: async () =>
       z
         .array(adminUserSchema)
-        .parse(await apiGet("/admin/users", { limit: 50, ...(q ? { q } : {}) })),
+        .parse(
+          await apiGet("/admin/users", { limit: 50, ...(q ? { q } : {}), ...(document ?? {}) }),
+        ),
+  });
+}
+
+export function useAdminUser(userId: string | null) {
+  return useQuery({
+    queryKey: ["admin", "users", "detail", userId],
+    queryFn: async () => adminUserDetailSchema.parse(await apiGet(`/admin/users/${userId}`)),
+    enabled: Boolean(userId),
   });
 }
 
@@ -413,13 +476,15 @@ export const useResolveDispute = adminMutation(
 );
 
 export const useSuspendUser = adminMutation(
-  (userId: string) => apiPost(`/admin/users/${userId}/suspend`),
+  (vars: { userId: string; reason: string }) =>
+    apiPost(`/admin/users/${vars.userId}/suspend`, { reason: vars.reason }),
   "Usuario suspendido.",
   [["admin", "users"]],
 );
 
 export const useReactivateUser = adminMutation(
-  (userId: string) => apiPost(`/admin/users/${userId}/reactivate`),
+  (vars: { userId: string; reason?: string }) =>
+    apiPost(`/admin/users/${vars.userId}/reactivate`, { reason: vars.reason }),
   "Usuario reactivado.",
   [["admin", "users"]],
 );

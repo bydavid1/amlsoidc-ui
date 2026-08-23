@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Banknote,
   Ban,
+  DollarSign,
   IdCard,
   LayoutDashboard,
   PackageCheck,
@@ -11,19 +11,25 @@ import {
   Sparkles,
   UserCog,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { RequireAuth } from "@/components/layout/require-auth";
 import { Button } from "@/components/ui/button";
+import { TEAM_ROLES } from "@/features/admin/roles";
 import { useAuth } from "@/features/auth/auth-provider";
 import { Role } from "@/features/auth/schemas";
 import { cn } from "@/lib/utils";
 
-const NAV: { href: string; label: string; icon: typeof LayoutDashboard; role: Role }[] = [
-  { href: "/admin", label: "Dinero", icon: LayoutDashboard, role: "ADMIN" },
+/** "ANY" = cualquier rol de equipo alcanza (hoy solo la home lo usa). */
+type NavRole = Role | "ANY";
+
+const NAV: { href: string; label: string; icon: typeof LayoutDashboard; role: NavRole }[] = [
+  { href: "/admin", label: "Inicio", icon: LayoutDashboard, role: "ANY" },
   { href: "/admin/operacion", label: "Operación", icon: PackageCheck, role: "OPS_AGENT" },
-  { href: "/admin/payouts", label: "Payouts", icon: Banknote, role: "ADMIN" },
+  { href: "/admin/dinero", label: "Dinero", icon: DollarSign, role: "ADMIN" },
+  { href: "/admin/payouts", label: "Payouts", icon: Wallet, role: "ADMIN" },
   { href: "/admin/disputas", label: "Disputas", icon: ShieldAlert, role: "SOPORTE_DISPUTAS" },
   { href: "/admin/kyc", label: "KYC", icon: IdCard, role: "RIESGO_LEGAL" },
   { href: "/admin/blocklist", label: "Blocklist", icon: Ban, role: "RIESGO_LEGAL" },
@@ -34,7 +40,7 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; role: Ro
 ];
 
 /** Sección de /admin cuyo rol gatea el pathname actual (match por segmento, no exacto — cubre rutas dinámicas como /admin/kyc/[caseId]). */
-function requiredRoleFor(pathname: string): Role {
+function requiredRoleFor(pathname: string): NavRole {
   const match = [...NAV].sort((a, b) => b.href.length - a.href.length).find((item) => {
     if (item.href === "/admin") return pathname === "/admin";
     return pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -48,7 +54,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isTeamMember = NAV.some((item) => hasRole(item.role));
+  const isTeamMember = TEAM_ROLES.some(hasRole);
 
   if (!isTeamMember) {
     return (
@@ -64,17 +70,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const visibleNav = NAV.filter((item) => hasRole("ADMIN") || hasRole(item.role));
+  const visibleNav = NAV.filter(
+    (item) => item.role === "ANY" || hasRole("ADMIN") || hasRole(item.role),
+  );
   const requiredRole = requiredRoleFor(pathname);
-  const canAccessSection = hasRole("ADMIN") || hasRole(requiredRole);
+  const canAccessSection =
+    requiredRole === "ANY" || hasRole("ADMIN") || hasRole(requiredRole);
 
   return (
     <div className="flex min-h-screen bg-surface-soft">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-hairline bg-background p-5 sm:flex">
-        <Link
-          href={visibleNav[0]?.href ?? "/admin"}
-          className="title-md mb-8 font-bold text-primary"
-        >
+        <Link href="/admin" className="title-md mb-8 font-bold text-primary">
           bringo <span className="caption-strong uppercase text-ink">ops</span>
         </Link>
         <nav className="flex flex-1 flex-col gap-1">
