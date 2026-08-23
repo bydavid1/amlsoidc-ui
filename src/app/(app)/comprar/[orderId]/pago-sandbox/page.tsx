@@ -60,7 +60,7 @@ function SandboxCheckout() {
             <p className="display-sm text-ink">
               ${Number(amount ?? 0).toFixed(2)} {currency}
             </p>
-            <p className="body-sm text-body-text">Servicio de traída Bringo</p>
+            <p className="body-sm text-body-text">Pedido Bringo (producto + servicio)</p>
           </div>
           <div className="space-y-3">
             <Button

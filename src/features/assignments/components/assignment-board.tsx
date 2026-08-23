@@ -3,7 +3,6 @@
 import { Inbox, MapPinPlus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { SupportButton } from "@/components/layout/support-button";
 import { OrderStatusBadge } from "@/components/status/order-status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { SIZE_UI, SizeCategory } from "@/features/orders/schemas";
 import { Assignment, travelerNextAction } from "../api";
 import {
+  useConfirmDirectDelivery,
+  useConfirmPurchase,
   useMarkInTransit,
   useMarkReceived,
   useMyAssignments,
@@ -29,8 +30,8 @@ import {
 
 const WAIT_COPY: Record<string, string> = {
   "wait-purchase": "Esperando que el comprador compre el producto…",
+  "wait-payment": "Esperando que el comprador pague el servicio antes de que compres…",
   "wait-tracking": "Bringo ya compró tu encargo — esperando que registren el número de guía…",
-  "in-transit-direct": "Vas en camino con el paquete. Al llegar, coordinás la entrega directa con el comprador.",
   "wait-buyer-confirmation": "Bringo tiene tu paquete — esperando la entrega final…",
   done: "Entregado — ¡buen trabajo!",
 };
@@ -82,7 +83,13 @@ function SetAddressDialog({ assignment }: { assignment: Assignment }) {
 export function EngagementCard({ assignment }: { assignment: Assignment }) {
   const markReceived = useMarkReceived();
   const markInTransit = useMarkInTransit();
-  const busy = markReceived.isPending || markInTransit.isPending;
+  const confirmPurchase = useConfirmPurchase();
+  const confirmDirectDelivery = useConfirmDirectDelivery();
+  const busy =
+    markReceived.isPending ||
+    markInTransit.isPending ||
+    confirmPurchase.isPending ||
+    confirmDirectDelivery.isPending;
 
   const next = travelerNextAction(assignment);
   const sizeUi = SIZE_UI[assignment.sizeCategory as SizeCategory];
@@ -112,6 +119,24 @@ export function EngagementCard({ assignment }: { assignment: Assignment }) {
           </div>
         </div>
         <div>
+          {next.kind === "confirm-purchase" && (
+            <Button
+              className="h-11 rounded-full px-5 font-semibold"
+              disabled={busy}
+              onClick={() => confirmPurchase.mutate(assignment.id)}
+            >
+              Ya compré el producto
+            </Button>
+          )}
+          {next.kind === "confirm-direct-delivery" && (
+            <Button
+              className="h-11 rounded-full px-5 font-semibold"
+              disabled={busy}
+              onClick={() => confirmDirectDelivery.mutate(assignment.id)}
+            >
+              Ya lo entregué al comprador
+            </Button>
+          )}
           {next.kind === "mark-received" && (
             <Button
               className="h-11 rounded-full px-5 font-semibold"
@@ -146,13 +171,8 @@ export function EngagementCard({ assignment }: { assignment: Assignment }) {
               </p>
             </div>
           )}
-          {next.kind === "in-transit-direct" && (
-            <div className="max-w-xs space-y-1 text-right">
-              <p className="body-sm text-body-text">{WAIT_COPY[next.kind]}</p>
-              <SupportButton context="entrega directa en curso" />
-            </div>
-          )}
           {(next.kind === "wait-purchase" ||
+            next.kind === "wait-payment" ||
             next.kind === "wait-tracking" ||
             next.kind === "wait-buyer-confirmation") && (
             <p className="body-sm text-body-text">{WAIT_COPY[next.kind]}</p>

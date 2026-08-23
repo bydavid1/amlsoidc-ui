@@ -61,6 +61,14 @@ export const assignmentsApi = {
   setReceivingAddress(id: string, addressLine: string): Promise<unknown> {
     return apiPost(`/assignments/${id}/set-receiving-address`, { addressLine });
   },
+  /** Flujo A (traveler-funded): el traveler registra que compró con su dinero. */
+  confirmPurchase(id: string): Promise<unknown> {
+    return apiPost(`/assignments/${id}/confirm-purchase`);
+  },
+  /** Flujos A/B (sin hub): el traveler confirma que entregó directo al comprador. */
+  confirmDirectDelivery(id: string): Promise<unknown> {
+    return apiPost(`/assignments/${id}/confirm-direct-delivery`);
+  },
 };
 
 /**
@@ -69,12 +77,14 @@ export const assignmentsApi = {
  */
 export type TravelerNextAction =
   | { kind: "wait-purchase" }
+  | { kind: "wait-payment" }
+  | { kind: "confirm-purchase" }
   | { kind: "wait-tracking" }
   | { kind: "mark-received" }
   | { kind: "mark-in-transit" }
   | { kind: "set-address" }
   | { kind: "deliver-to-hub" }
-  | { kind: "in-transit-direct" }
+  | { kind: "confirm-direct-delivery" }
   | { kind: "wait-buyer-confirmation" }
   | { kind: "done" }
   | { kind: "none" };
@@ -85,8 +95,13 @@ export function travelerNextAction(a: Assignment): TravelerNextAction {
     case "ASSIGNED":
     case "SOURCING":
       if (a.fulfillmentStatus === "AWAITING_PURCHASE") {
-        // modelo hub: sin dirección registrada, el comprador no puede comprar
-        return a.receivingAddressLine ? { kind: "wait-purchase" } : { kind: "set-address" };
+        // modelo hub: sin dirección registrada, no se puede comprar
+        if (!a.receivingAddressLine) return { kind: "set-address" };
+        if (a.flowType === "TRAVELER_PURCHASES_PRODUCT") {
+          // flujo A: compra el propio traveler, una vez el buyer pagó el servicio
+          return a.servicePaid ? { kind: "confirm-purchase" } : { kind: "wait-payment" };
+        }
+        return { kind: "wait-purchase" };
       }
       if (
         a.fulfillmentStatus === "PURCHASED" &&
@@ -101,14 +116,11 @@ export function travelerNextAction(a: Assignment): TravelerNextAction {
       if (a.fulfillmentStatus === "RECEIVED_BY_TRAVELER") return { kind: "mark-in-transit" };
       return { kind: "none" };
     case "IN_TRANSIT":
-      // solo el flujo C (hub) tiene un paso de entrega en punto Bringo hoy
+      // flujo C (hub): entrega en el punto Bringo; flujo A/B: directo al comprador
       if (a.flowType === "BRINGO_PURCHASES_HUB_DELIVERY") {
         return { kind: "deliver-to-hub" };
       }
-      // flujo A/B: el traveler entrega directo al comprador — HOY no hay una
-      // acción propia ni de admin que cierre este paso (hueco real del
-      // backend, no solo de copy); se muestra informativo, sin botón falso
-      return { kind: "in-transit-direct" };
+      return { kind: "confirm-direct-delivery" };
     case "READY_FOR_DELIVERY":
       return { kind: "wait-buyer-confirmation" };
     case "DELIVERED":

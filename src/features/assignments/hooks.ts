@@ -83,6 +83,15 @@ export function useMarkReceived() {
 export function useMarkInTransit() {
   return useAssignmentAction(assignmentsApi.markInTransit, "¡Buen viaje! El comprador fue notificado.");
 }
+export function useConfirmPurchase() {
+  return useAssignmentAction(assignmentsApi.confirmPurchase, "Compra confirmada.");
+}
+export function useConfirmDirectDelivery() {
+  return useAssignmentAction(
+    assignmentsApi.confirmDirectDelivery,
+    "Entrega confirmada. El comprador ya puede darla por recibida.",
+  );
+}
 export function useSetReceivingAddress() {
   return useAssignmentAction2(
     (vars: { id: string; addressLine: string }) =>
