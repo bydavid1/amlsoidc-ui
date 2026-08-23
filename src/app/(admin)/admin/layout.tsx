@@ -2,6 +2,8 @@
 
 import {
   Banknote,
+  Ban,
+  IdCard,
   LayoutDashboard,
   PackageCheck,
   ShieldAlert,
@@ -21,6 +23,8 @@ const NAV = [
   { href: "/admin/operacion", label: "Operación", icon: PackageCheck },
   { href: "/admin/payouts", label: "Payouts", icon: Banknote },
   { href: "/admin/disputas", label: "Disputas", icon: ShieldAlert },
+  { href: "/admin/kyc", label: "KYC", icon: IdCard },
+  { href: "/admin/blocklist", label: "Blocklist", icon: Ban },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
   { href: "/admin/configuracion", label: "Configuración", icon: SlidersHorizontal },
   { href: "/admin/curaduria", label: "Curaduría", icon: Sparkles },

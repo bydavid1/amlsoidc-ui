@@ -199,6 +199,12 @@ export const travelerRiskProfileSchema = z.object({
 });
 export type TravelerRiskProfile = z.infer<typeof travelerRiskProfileSchema>;
 
+export const artifactViewUrlSchema = z.object({
+  url: z.string(),
+  expiresAt: z.string(),
+});
+export type ArtifactViewUrl = z.infer<typeof artifactViewUrlSchema>;
+
 export const activeFlowSettingSchema = z.object({
   activeFlowType: z.enum([
     "TRAVELER_PURCHASES_PRODUCT",
@@ -309,6 +315,21 @@ export function useKycCase(caseId: string | null) {
     queryKey: ["admin", "kyc", "cases", caseId],
     queryFn: async () => kycCaseSchema.parse(await apiGet(`/admin/kyc/cases/${caseId}`)),
     enabled: Boolean(caseId),
+  });
+}
+
+/** Link firmado y temporal para ver un documento/selfie; se refresca antes de expirar mientras esté visible. */
+export function useKycArtifactViewUrl(caseId: string, artifactId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["admin", "kyc", "cases", caseId, "artifacts", artifactId, "view-url"],
+    queryFn: async () =>
+      artifactViewUrlSchema.parse(
+        await apiGet(`/admin/kyc/cases/${caseId}/artifacts/${artifactId}/view-url`),
+      ),
+    enabled,
+    staleTime: 0,
+    gcTime: 0,
+    refetchInterval: enabled ? 240_000 : false,
   });
 }
 

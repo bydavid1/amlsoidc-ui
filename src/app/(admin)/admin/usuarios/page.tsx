@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,14 @@ export default function AdminUsersPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
+                  {u.travelerProfileId && (
+                    <Link
+                      href={`/admin/viajeros/${u.travelerProfileId}`}
+                      className="caption-strong text-primary"
+                    >
+                      Perfil de viajero
+                    </Link>
+                  )}
                   <Badge
                     className={
                       u.status === "ACTIVE"
