@@ -138,3 +138,11 @@ export async function apiPut<T>(url: string, body?: unknown): Promise<T> {
   const res = await http.put<ApiEnvelope<T>>(url, body);
   return res.data.data;
 }
+
+/** Multipart: el default de la instancia es application/json, hay que dejar que el navegador ponga el boundary correcto. */
+export async function apiUpload<T>(url: string, formData: FormData): Promise<T> {
+  const res = await http.post<ApiEnvelope<T>>(url, formData, {
+    headers: { "Content-Type": undefined },
+  });
+  return res.data.data;
+}

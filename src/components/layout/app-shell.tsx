@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TEAM_ROLES } from "@/features/admin/roles";
 import { useAuth } from "@/features/auth/auth-provider";
 import { useUnreadCount } from "@/features/notifications/api";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {space.label}
                 </Link>
               ))}
-              {hasRole("ADMIN") && (
+              {TEAM_ROLES.some(hasRole) && (
                 <Link
                   href="/admin"
                   className="rounded-full px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-strong"

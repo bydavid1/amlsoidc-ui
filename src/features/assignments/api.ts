@@ -69,10 +69,12 @@ export const assignmentsApi = {
  */
 export type TravelerNextAction =
   | { kind: "wait-purchase" }
+  | { kind: "wait-tracking" }
   | { kind: "mark-received" }
   | { kind: "mark-in-transit" }
   | { kind: "set-address" }
   | { kind: "deliver-to-hub" }
+  | { kind: "in-transit-direct" }
   | { kind: "wait-buyer-confirmation" }
   | { kind: "done" }
   | { kind: "none" };
@@ -91,15 +93,22 @@ export function travelerNextAction(a: Assignment): TravelerNextAction {
         (a.flowType === "BRINGO_PURCHASES_DIRECT_DELIVERY" ||
           a.flowType === "BRINGO_PURCHASES_HUB_DELIVERY")
       ) {
-        return { kind: "none" };
+        // Bringo ya compró (flujo B/C); falta que registren el tracking, no le toca nada al traveler todavía
+        return { kind: "wait-tracking" };
       }
       if (a.fulfillmentStatus === "PURCHASED") return { kind: "mark-received" };
       if (a.fulfillmentStatus === "TRACKING_REGISTERED") return { kind: "mark-received" };
       if (a.fulfillmentStatus === "RECEIVED_BY_TRAVELER") return { kind: "mark-in-transit" };
       return { kind: "none" };
     case "IN_TRANSIT":
-      // el viajero entrega en el punto Bringo; la recepción la confirma Bringo
-      return { kind: "deliver-to-hub" };
+      // solo el flujo C (hub) tiene un paso de entrega en punto Bringo hoy
+      if (a.flowType === "BRINGO_PURCHASES_HUB_DELIVERY") {
+        return { kind: "deliver-to-hub" };
+      }
+      // flujo A/B: el traveler entrega directo al comprador — HOY no hay una
+      // acción propia ni de admin que cierre este paso (hueco real del
+      // backend, no solo de copy); se muestra informativo, sin botón falso
+      return { kind: "in-transit-direct" };
     case "READY_FOR_DELIVERY":
       return { kind: "wait-buyer-confirmation" };
     case "DELIVERED":

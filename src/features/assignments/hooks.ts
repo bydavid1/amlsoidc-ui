@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api/types";
 import { assignmentsApi } from "./api";
@@ -24,6 +25,7 @@ export function useAvailableOrders(tripId: string) {
 
 export function useClaimOrder(tripId: string) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   return useMutation({
     mutationFn: (orderId: string) => assignmentsApi.claim(tripId, orderId),
     onSuccess: () => {
@@ -31,6 +33,13 @@ export function useClaimOrder(tripId: string) {
       void queryClient.invalidateQueries({ queryKey: ["assignments"] });
     },
     onError: (error) => {
+      if (error instanceof ApiError && error.code === "KYC_REQUIRED") {
+        toast.error("Necesitás verificar tu identidad antes de aceptar tu primer encargo.", {
+          action: { label: "Verificar ahora", onClick: () => router.push("/verificacion") },
+          duration: 8000,
+        });
+        return;
+      }
       if (error instanceof ApiError && error.code === "ORDER_ALREADY_TAKEN") {
         toast.error("Otro viajero tomó este encargo primero.");
         void queryClient.invalidateQueries({ queryKey: ["assignments"] });

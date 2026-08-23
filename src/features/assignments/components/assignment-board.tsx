@@ -29,6 +29,8 @@ import {
 
 const WAIT_COPY: Record<string, string> = {
   "wait-purchase": "Esperando que el comprador compre el producto…",
+  "wait-tracking": "Bringo ya compró tu encargo — esperando que registren el número de guía…",
+  "in-transit-direct": "Vas en camino con el paquete. Al llegar, coordinás la entrega directa con el comprador.",
   "wait-buyer-confirmation": "Bringo tiene tu paquete — esperando la entrega final…",
   done: "Entregado — ¡buen trabajo!",
 };
@@ -144,7 +146,15 @@ export function EngagementCard({ assignment }: { assignment: Assignment }) {
               </p>
             </div>
           )}
-          {(next.kind === "wait-purchase" || next.kind === "wait-buyer-confirmation") && (
+          {next.kind === "in-transit-direct" && (
+            <div className="max-w-xs space-y-1 text-right">
+              <p className="body-sm text-body-text">{WAIT_COPY[next.kind]}</p>
+              <SupportButton context="entrega directa en curso" />
+            </div>
+          )}
+          {(next.kind === "wait-purchase" ||
+            next.kind === "wait-tracking" ||
+            next.kind === "wait-buyer-confirmation") && (
             <p className="body-sm text-body-text">{WAIT_COPY[next.kind]}</p>
           )}
           {next.kind === "done" && (
