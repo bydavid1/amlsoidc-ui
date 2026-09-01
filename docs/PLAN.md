@@ -1,3 +1,12 @@
+> **ESTADO: PARCIALMENTE VIGENTE** — Los principios (seccion 1), el contrato con
+> la API (2), el theming (3), la arquitectura (4) y el mapa pantallas-API (5)
+> siguen valiendo. Los hitos F0-F7 (6) ya se ejecutaron en su mayoria: el estado
+> real esta en [proyecto/01-estado-actual.md](proyecto/01-estado-actual.md).
+> Este plan excluye explicitamente el panel Admin, que **si existe** hoy: ver
+> [modulos/admin.md](modulos/admin.md).
+>
+> Indice de documentacion: [README.md](README.md).
+
 # Bringo UI — Plan de desarrollo del frontend público
 
 > Contraparte visual de la **parte pública** del backend de Bringo (landing +
@@ -5,7 +14,7 @@
 > este plan (será otra superficie que consume la misma API).
 >
 > Fuentes de verdad:
-> - **Negocio y API**: `../amlscs/docs/design/` (00–08) y Swagger en `http://localhost:3006/api/docs`
+> - **Negocio y API**: `../../amlsoidc/docs/design/` (00–08) y Swagger en `http://localhost:3006/api/docs`
 > - **Design system**: [DESIGN-coinbase.md](DESIGN-coinbase.md) — paleta, tipografía, radios, spacing y componentes
 
 ---
@@ -104,7 +113,7 @@
 ## 4. Arquitectura del proyecto
 
 ```
-amlscs-ui/
+amlsoidc-ui/
   src/
     app/
       (marketing)/                 # rutas públicas sin auth

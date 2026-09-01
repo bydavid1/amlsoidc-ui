@@ -1,3 +1,9 @@
+> **ESTADO: VIGENTE Y NORMATIVO** — Es la ley del diseno de esta UI. Los tokens
+> viven en `src/app/globals.css` como CSS variables. Regla dura: **nunca un hex
+> inline**; todo color, tipografia, radio y spacing sale de un token.
+>
+> Como se aplica en el codigo: [proyecto/06-design-system.md](proyecto/06-design-system.md).
+
 ---
 version: alpha
 name: Coinbase-design-analysis
