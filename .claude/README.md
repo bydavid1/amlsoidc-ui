@@ -12,7 +12,7 @@ frontend se hacía sin el contexto que el backend tenía documentado.
 > Estado real del frontend:
 > [`../docs/proyecto/01-estado-actual.md`](../docs/proyecto/01-estado-actual.md).
 > Contrato con la API:
-> [`../../docs/01-integracion.md`](../../docs/01-integracion.md).
+> [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md).
 
 ---
 

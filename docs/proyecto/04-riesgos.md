@@ -1,7 +1,7 @@
 # 04 — Riesgos del frontend
 
 El **detalle completo** de cada hallazgo está en el registro consolidado del
-workspace: [`../../../docs/02-riesgos.md`](../../../docs/02-riesgos.md). Los ids
+workspace: [`docs/plataforma/02-riesgos.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/02-riesgos.md). Los ids
 `R-nn` son estables y compartidos entre los dos proyectos.
 
 Este documento es la **vista del frontend**.

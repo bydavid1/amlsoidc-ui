@@ -94,7 +94,7 @@ Plataforma nunca cobró.
 
 **Es un arreglo conjunto con el backend:** el endpoint público de webhook y el
 valor por defecto del secreto también tienen que cambiar. Ver R-01 en
-[`../../../docs/02-riesgos.md`](../../../docs/02-riesgos.md).
+[`docs/plataforma/02-riesgos.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/02-riesgos.md).
 
 Nota adicional: la página de checkout sandbox es la **única** llamada del
 proyecto que no pasa por `lib/api/client`. Usa `fetch` directo, así que se salta

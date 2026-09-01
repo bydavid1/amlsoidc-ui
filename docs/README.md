@@ -22,12 +22,12 @@ system.
 
 | Documento | Contenido |
 |-----------|-----------|
-| [`../../docs/00-plataforma.md`](../../docs/00-plataforma.md) | Qué es el sistema, actores, modelo de negocio vigente, glosario. **Empieza aquí.** |
-| [`../../docs/01-integracion.md`](../../docs/01-integracion.md) | **Contrato con la API**: envelope, auth, paginación, matriz de endpoints, variables de entorno |
-| [`../../docs/02-riesgos.md`](../../docs/02-riesgos.md) | Registro consolidado de riesgos (`R-nn`) |
-| [`../../docs/03-pendientes.md`](../../docs/03-pendientes.md) | Backlog consolidado |
-| [`../../docs/04-historia.md`](../../docs/04-historia.md) | Qué decisión reemplazó a cuál |
-| [`../../docs/05-contexto-agentes.md`](../../docs/05-contexto-agentes.md) | Reglas para agentes de IA |
+| [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md) | Qué es el sistema, actores, modelo de negocio vigente, glosario. **Empieza aquí.** |
+| [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md) | **Contrato con la API**: envelope, auth, paginación, matriz de endpoints, variables de entorno |
+| [`docs/plataforma/02-riesgos.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/02-riesgos.md) | Registro consolidado de riesgos (`R-nn`) |
+| [`docs/plataforma/03-pendientes.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/03-pendientes.md) | Backlog consolidado |
+| [`docs/plataforma/04-historia.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/04-historia.md) | Qué decisión reemplazó a cuál |
+| [`docs/plataforma/05-contexto-agentes.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/05-contexto-agentes.md) | Reglas para agentes de IA |
 
 ## Nivel proyecto (este frontend)
 

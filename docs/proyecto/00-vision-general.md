@@ -16,9 +16,9 @@ Consume la misma API `/api/v1` que consumirán el cliente móvil y cualquier
 integración: **no hay endpoints "solo para la web"**.
 
 Modelo de negocio, actores y glosario:
-[`../../../docs/00-plataforma.md`](../../../docs/00-plataforma.md).
+[`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md).
 Contrato con la API:
-[`../../../docs/01-integracion.md`](../../../docs/01-integracion.md).
+[`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md).
 
 ## Stack
 

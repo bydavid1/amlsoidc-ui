@@ -4,7 +4,7 @@ Guía para cualquier agente de IA (Claude Code, GitHub Copilot, otros) que traba
 en este repositorio. **Léela completa antes de tocar código.**
 
 > Contexto compartido entre los dos repos del workspace:
-> [`../docs/05-contexto-agentes.md`](../docs/05-contexto-agentes.md).
+> [`docs/plataforma/05-contexto-agentes.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/05-contexto-agentes.md).
 > Documentación de este frontend: [`docs/README.md`](docs/README.md).
 
 ---
@@ -20,8 +20,8 @@ operación** (`/admin`).
 Consume la misma API `/api/v1` que consumirán el móvil y las integraciones.
 
 Modelo de negocio, actores y glosario:
-[`../docs/00-plataforma.md`](../docs/00-plataforma.md).
-Contrato con la API: [`../docs/01-integracion.md`](../docs/01-integracion.md).
+[`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md).
+Contrato con la API: [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md).
 
 **Nomenclatura:** la plataforma no tiene nombre asignado. En documentación se la
 llama "la Plataforma" o "el Sistema". El nombre-clave heredado aparece en ~40
@@ -52,7 +52,7 @@ divergen, manda el backend.
 
 Antes de construir una pantalla que dependa de reglas de negocio (estados,
 límites, permisos), **confirma cuál es el modelo vigente** en
-[`../docs/00-plataforma.md`](../docs/00-plataforma.md). No asumas un flujo no
+[`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md). No asumas un flujo no
 confirmado.
 
 ## 4. Lo que más confunde (léelo o perderás media hora)
@@ -103,9 +103,9 @@ secreto del webhook de pagos y permite marcar cualquier pago como pagado
 
 | Documento | Para qué |
 |-----------|----------|
-| [`../docs/00-plataforma.md`](../docs/00-plataforma.md) | Negocio, actores, glosario |
-| [`../docs/01-integracion.md`](../docs/01-integracion.md) | **Contrato con la API**: envelope, errores, endpoints |
-| [`../docs/02-riesgos.md`](../docs/02-riesgos.md) | 47 hallazgos abiertos con id estable |
+| [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md) | Negocio, actores, glosario |
+| [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md) | **Contrato con la API**: envelope, errores, endpoints |
+| [`docs/plataforma/02-riesgos.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/02-riesgos.md) | 47 hallazgos abiertos con id estable |
 | [`docs/proyecto/01-estado-actual.md`](docs/proyecto/01-estado-actual.md) | Qué pantallas existen y qué falta |
 | [`docs/modulos/<modulo>.md`](docs/modulos/) | Ficha del módulo que vas a tocar |
 | [`docs/proyecto/06-design-system.md`](docs/proyecto/06-design-system.md) | Tokens y reglas de estilo |
@@ -210,7 +210,7 @@ npx tsc --noEmit   # comprobación de tipos (NO hay script propio)
 `corridor`/corredor · `travelerReward` · `platformFee` · `estimatedTotal` ·
 `sizeCategory` · escrow · hub · KYC · `displayStatus`.
 
-Estados: ver [`../docs/00-plataforma.md`](../docs/00-plataforma.md) §8.
+Estados: ver [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md) §8.
 
 **Conceptos NO implementados** (no los uses como si existieran): `threshold`,
 `reputation tier`, subroles operativos, capacidad de viaje.

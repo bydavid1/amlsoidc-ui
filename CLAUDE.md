@@ -6,10 +6,10 @@
 
 ## Índice de documentación
 
-- **Negocio y glosario:** [`../docs/00-plataforma.md`](../docs/00-plataforma.md)
-- **Contrato con la API:** [`../docs/01-integracion.md`](../docs/01-integracion.md) — envelope, errores, endpoints, variables
-- **Riesgos abiertos (ids `R-nn`):** [`../docs/02-riesgos.md`](../docs/02-riesgos.md)
-- **Historia y decisiones revertidas:** [`../docs/04-historia.md`](../docs/04-historia.md)
+- **Negocio y glosario:** [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md)
+- **Contrato con la API:** [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md) — envelope, errores, endpoints, variables
+- **Riesgos abiertos (ids `R-nn`):** [`docs/plataforma/02-riesgos.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/02-riesgos.md)
+- **Historia y decisiones revertidas:** [`docs/plataforma/04-historia.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/04-historia.md)
 - **Documentación de este repo:** [`docs/README.md`](docs/README.md)
 - **Estado real, pantalla por pantalla:** [`docs/proyecto/01-estado-actual.md`](docs/proyecto/01-estado-actual.md)
 - **Ficha del módulo que vas a tocar:** [`docs/modulos/`](docs/modulos/)

@@ -7,7 +7,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui
 TanStack Query · Zod.
 
 > La plataforma aún no tiene nombre asignado; la documentación la nombra
-> genéricamente. Ver [`../docs/00-plataforma.md`](../docs/00-plataforma.md)
+> genéricamente. Ver [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md)
 > §Nomenclatura.
 
 ## Documentación
@@ -16,9 +16,9 @@ TanStack Query · Zod.
 
 | Documento | Para qué |
 |-----------|----------|
-| [`../docs/00-plataforma.md`](../docs/00-plataforma.md) | Negocio, actores, modelo vigente, glosario |
-| [`../docs/01-integracion.md`](../docs/01-integracion.md) | **Contrato con la API**: envelope, auth, errores, endpoints, variables |
-| [`../docs/02-riesgos.md`](../docs/02-riesgos.md) | Riesgos abiertos del workspace (ids `R-nn`) |
+| [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md) | Negocio, actores, modelo vigente, glosario |
+| [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md) | **Contrato con la API**: envelope, auth, errores, endpoints, variables |
+| [`docs/plataforma/02-riesgos.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/02-riesgos.md) | Riesgos abiertos del workspace (ids `R-nn`) |
 | [docs/proyecto/01-estado-actual.md](docs/proyecto/01-estado-actual.md) | **Qué pantallas existen y qué falta** |
 | [docs/proyecto/02-guia-de-desarrollo.md](docs/proyecto/02-guia-de-desarrollo.md) | Setup, comandos, convenciones |
 | [docs/proyecto/06-design-system.md](docs/proyecto/06-design-system.md) | Tokens y reglas de estilo |

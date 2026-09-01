@@ -2,7 +2,7 @@
 
 Backlog de este repo. El consolidado de los dos proyectos, con el orden de
 prioridad global, está en
-[`../../../docs/03-pendientes.md`](../../../docs/03-pendientes.md).
+[`docs/plataforma/03-pendientes.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/03-pendientes.md).
 
 Convención: `[ ]` abierto · `[~]` en curso · `[x]` cerrado con fecha.
 

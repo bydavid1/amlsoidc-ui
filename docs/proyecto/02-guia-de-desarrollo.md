@@ -146,9 +146,9 @@ Cada pantalla define:
 ## 5. Cómo añadir una pantalla
 
 1. **Comprueba el contrato**: ¿el endpoint existe?
-   [`../../../docs/01-integracion.md`](../../../docs/01-integracion.md) §7.
+   [`docs/plataforma/01-integracion.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/01-integracion.md) §7.
 2. **Comprueba las reglas de negocio** que aplican:
-   [`../../../docs/00-plataforma.md`](../../../docs/00-plataforma.md). Si no está
+   [`docs/plataforma/00-plataforma.md`](https://github.com/bydavid1/amlsoidc/blob/main/docs/plataforma/00-plataforma.md). Si no está
    claro cuál es el modelo vigente, **pregunta antes de asumir**.
 3. Añade o extiende `features/<modulo>/api.ts` con la llamada y su esquema Zod.
 4. Añade el hook en `features/<modulo>/hooks.ts`.
